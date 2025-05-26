@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 @RestController
-@RequestMapping("/api/event/files")
+@RequestMapping("/api/v1/event/files")
 public class MumlyFileController {
 
     private final String UPLOAD_DIR = "uploads";

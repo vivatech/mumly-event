@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface MumlyAdminsRepository extends JpaRepository<MumlyAdmin, Integer> {
     MumlyAdmin findByUsername(String username);
 
+    MumlyAdmin findByEmail(String email);
 }

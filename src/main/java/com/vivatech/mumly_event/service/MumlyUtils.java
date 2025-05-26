@@ -118,6 +118,10 @@ public class MumlyUtils {
         return calendar.getTime();
     }
 
+    public static LocalDateTime addMinutesToJavaUtilDate(LocalDateTime date, int minutes) {
+        return date.plusMinutes(minutes);
+    }
+
     public static int calculateTimeLeftForExpiry(Date loginTime, int minutes) {
         // Calculate the expiry time by adding the expiry duration to the login time
         long expiryTimeInMillis = loginTime.getTime() + TimeUnit.MINUTES.toMillis(minutes);

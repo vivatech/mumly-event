@@ -9,16 +9,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/event/ticket")
+@RequestMapping("/api/v1/event/ticket")
 public class TicketController {
 
     @Autowired
     private TicketsRepository ticketsRepository;
 
     @PostMapping
-    public void createTicket(@RequestBody String ticketType) {
+    public Tickets createTicket(@RequestBody Tickets ticket) {
         Tickets tickets = new Tickets();
-        tickets.setTicketType(ticketType);
-        ticketsRepository.save(tickets);
+        tickets.setTicketType(ticket.getTicketType());
+        tickets.setTicketPrice(ticket.getTicketPrice());
+        return ticketsRepository.save(tickets);
     }
 }

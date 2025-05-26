@@ -1,6 +1,5 @@
 package com.vivatech.mumly_event.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -9,14 +8,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "temp_mumly_event_tbl")
+@Table(name = "mumly_event_tbl")
 public class MumlyEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,5 +57,12 @@ public class MumlyEvent {
 
     @ManyToMany
     private List<Tickets> tickets;
+
+    @ManyToOne
+    private MumlyEventOrganizer createdBy;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+    @ManyToOne
+    private MumlyEventOrganizer updatedBy;
 
 }

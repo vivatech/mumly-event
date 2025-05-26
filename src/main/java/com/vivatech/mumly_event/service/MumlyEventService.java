@@ -1,20 +1,24 @@
 package com.vivatech.mumly_event.service;
 
 import com.vivatech.mumly_event.constenum.EventConstants;
+import com.vivatech.mumly_event.dto.MumlyEventFilterRequest;
 import com.vivatech.mumly_event.dto.MumlyEventRequestDto;
+import com.vivatech.mumly_event.dto.MumlyEventResponseDto;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
-import com.vivatech.mumly_event.model.EventCategory;
-import com.vivatech.mumly_event.model.MumlyEvent;
-import com.vivatech.mumly_event.model.Tickets;
-import com.vivatech.mumly_event.repository.EventCategoryRepository;
-import com.vivatech.mumly_event.repository.MumlyEventRepository;
-import com.vivatech.mumly_event.repository.TicketsRepository;
+import com.vivatech.mumly_event.model.*;
+import com.vivatech.mumly_event.repository.*;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,14 +31,20 @@ public class MumlyEventService {
     private final FileStorageService fileStorageService;
     private final MumlyEventRepository mumlyEventRepository;
     private final TicketsRepository ticketsRepository;
+    private final MumlyAdminsRepository mumlyAdminsRepository;
+    private final MumlyEventOrganizerRepository mumlyEventOrganizerRepository;
 
     public MumlyEventService(EventCategoryRepository eventCategoryRepository, FileStorageService fileStorageService,
                              MumlyEventRepository mumlyEventRepository,
-                             TicketsRepository ticketsRepository) {
+                             TicketsRepository ticketsRepository,
+                             MumlyAdminsRepository mumlyAdminsRepository,
+                             MumlyEventOrganizerRepository mumlyEventOrganizerRepository) {
         this.eventCategoryRepository = eventCategoryRepository;
         this.fileStorageService = fileStorageService;
         this.mumlyEventRepository = mumlyEventRepository;
         this.ticketsRepository = ticketsRepository;
+        this.mumlyAdminsRepository = mumlyAdminsRepository;
+        this.mumlyEventOrganizerRepository = mumlyEventOrganizerRepository;
     }
 
     @Transactional
@@ -66,7 +76,6 @@ public class MumlyEventService {
             String fileName = UUID.randomUUID() + "." +  fileStorageService.getFileExtension(Objects.requireNonNull(eventPicturesUploadFiles.getOriginalFilename()));
             mumlyEvent.setEventPicture(fileName);
         }
-
         MumlyEvent event = mumlyEventRepository.save(mumlyEvent);
 
         if (eventCoverImageFile != null) {
@@ -96,7 +105,14 @@ public class MumlyEventService {
 
         EventCategory eventCategory = eventCategoryRepository.findById(dto.getEventCategoryId()).orElseThrow(() -> new CustomExceptionHandler("Event category not found"));
 
-        MumlyEvent event = mumlyEventRepository.findById(dto.getId()).orElse(new MumlyEvent());
+        MumlyAdmin exitingUser = mumlyAdminsRepository.findByUsername(dto.getCreatedBy());
+
+        if (exitingUser == null) throw new CustomExceptionHandler("Created by user not found");
+
+        MumlyEvent event = null;
+        if (dto.getId() != null) {
+            event = mumlyEventRepository.findById(dto.getId()).orElse(new MumlyEvent());
+        } else event = new MumlyEvent();
         event.setEventName(dto.getEventName());
         event.setEventCategory(eventCategory);
         event.setEventDescription(dto.getEventDescription());
@@ -121,27 +137,39 @@ public class MumlyEventService {
             }
         }
         event.setTickets(tickets);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(exitingUser.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        if (event.getId() == null) {
+            event.setCreatedAt(LocalDate.now());
+            event.setCreatedBy(organizer);
+        } else {
+            event.setUpdatedAt(LocalDate.now());
+            event.setUpdatedBy(organizer);
+        }
         return event;
     }
 
-    public List<MumlyEvent> getAllEvent() {
-        List<MumlyEvent> allList = mumlyEventRepository.findAll();
-        List<MumlyEvent> mumlyEvents = new ArrayList<>();
+    private MumlyEvent setImagePath(MumlyEvent mumlyEvent) {
+        String eventPicture = mumlyEvent.getEventPicture();
+        String eventBrochure = mumlyEvent.getEventBrochure();
+        String eventCoverImage = mumlyEvent.getEventCoverImage();
+        mumlyEvent.setEventPicture(!ObjectUtils.isEmpty(eventPicture) ? EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + eventPicture : null);
+        mumlyEvent.setEventBrochure(!ObjectUtils.isEmpty(eventBrochure) ? EventConstants.EVENT_BROCHURE + mumlyEvent.getId() + "/" + eventBrochure : null);
+        mumlyEvent.setEventCoverImage(!ObjectUtils.isEmpty(eventCoverImage) ? EventConstants.EVENT_COVER_PICTURE + mumlyEvent.getId() + "/" + eventCoverImage : null);
+        List<String> eventPictureListString = mumlyEvent.getEventPictureList();
+        List<String> eventPictureList = new ArrayList<>();
+        for (String imageName : eventPictureListString) {
+            String filePath = EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + imageName;
+            eventPictureList.add(filePath);
+        }
+        mumlyEvent.setEventPictureList(eventPictureList);
+        return mumlyEvent;
+    }
+
+    public List<MumlyEventResponseDto> getAllEvent(List<MumlyEvent> allList) {
+        List<MumlyEventResponseDto> mumlyEvents = new ArrayList<>();
         for (MumlyEvent mumlyEvent : allList) {
-            String eventPicture = mumlyEvent.getEventPicture();
-            String eventBrochure = mumlyEvent.getEventBrochure();
-            String eventCoverImage = mumlyEvent.getEventCoverImage();
-            mumlyEvent.setEventPicture(!ObjectUtils.isEmpty(eventPicture) ? EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + eventPicture : null);
-            mumlyEvent.setEventBrochure(!ObjectUtils.isEmpty(eventBrochure) ? EventConstants.EVENT_BROCHURE + mumlyEvent.getId() + "/" + eventBrochure : null);
-            mumlyEvent.setEventCoverImage(!ObjectUtils.isEmpty(eventCoverImage) ? EventConstants.EVENT_COVER_PICTURE + mumlyEvent.getId() + "/" + eventCoverImage : null);
-            List<String> eventPictureListString = mumlyEvent.getEventPictureList();
-            List<String> eventPictureList = new ArrayList<>();
-            for (String imageName : eventPictureListString) {
-                String filePath = EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + imageName;
-                eventPictureList.add(filePath);
-            }
-            mumlyEvent.setEventPictureList(eventPictureList);
-            mumlyEvents.add(mumlyEvent);
+            MumlyEventResponseDto event = convertEntityToDto(setImagePath(mumlyEvent));
+            mumlyEvents.add(event);
         }
         return mumlyEvents;
     }
@@ -169,5 +197,63 @@ public class MumlyEventService {
             }
             mumlyEventRepository.delete(mumlyEvent);
         });
+    }
+
+    private MumlyEventResponseDto convertEntityToDto(MumlyEvent mumlyEvent) {
+        int soldTickets = 0;
+        MumlyEventResponseDto dto = new MumlyEventResponseDto();
+        dto.setId(mumlyEvent.getId());
+        dto.setEventName(mumlyEvent.getEventName());
+        dto.setEventCategory(mumlyEvent.getEventCategory());
+        dto.setDescription(mumlyEvent.getEventDescription());
+        dto.setEventDate(mumlyEvent.getStartDate());
+        dto.setEventTime(mumlyEvent.getStartTime());
+        dto.setEventType(mumlyEvent.getEventType());
+        dto.setVenueName(mumlyEvent.getVenueName());
+        dto.setVenueAddress(mumlyEvent.getVenueAddress());
+        dto.setTicketPrice(mumlyEvent.getTickets());
+        dto.setTotalTickets(mumlyEvent.getMaximumNumberOfAttendees());
+        dto.setSoldTickets(soldTickets);
+        dto.setAvailableTickets(mumlyEvent.getMaximumNumberOfAttendees() - dto.getSoldTickets());
+        dto.setEventCoverImage(mumlyEvent.getEventCoverImage());
+        return dto;
+    }
+
+    public Page<MumlyEvent> filterEvent(MumlyEventFilterRequest dto, Pageable pageable) {
+        Specification<MumlyEvent> eventSpecification = getEventSpecification(dto);
+        return mumlyEventRepository.findAll(eventSpecification, pageable);
+    }
+
+    public Specification<MumlyEvent> getEventSpecification(MumlyEventFilterRequest dto) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            //Filter by document name
+            if (!ObjectUtils.isEmpty(dto.getEventCategoryId())) {
+                Join<MumlyEvent, EventCategory> mumlyEventJoin = root.join("eventCategory");
+                predicates.add(criteriaBuilder.equal(mumlyEventJoin.get("id"), dto.getEventCategoryId()));
+            }
+
+            // Filter by Country
+            if (dto.getStartDate() != null && dto.getEndDate() != null) {
+                predicates.add(criteriaBuilder.between(root.get("startDate"), dto.getStartDate(), dto.getEndDate()));
+            }
+
+            if (dto.getUsername() != null) {
+                MumlyAdmin exitingUser = mumlyAdminsRepository.findByUsername(dto.getUsername());
+                MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(exitingUser.getId()).orElse(null);
+                if (organizer != null) {
+                    Join<MumlyEvent, MumlyEventOrganizer> mumlyEventOrganizerJoin = root.join("createdBy");
+                    predicates.add(criteriaBuilder.equal(mumlyEventOrganizerJoin.get("id"), organizer.getId()));
+                }
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    public MumlyEvent getEventById(Integer id) {
+        MumlyEvent event = mumlyEventRepository.findById(id).orElseThrow(() -> new CustomExceptionHandler("Event not found"));
+        return setImagePath(event);
     }
 }

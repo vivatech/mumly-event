@@ -21,6 +21,8 @@ public class AuthDto {
     private Date loginTime;
     private Date logoutTime;
     private String token;
+    private String otp;
+    private String email;
 
     public AuthDto (String status, String message) {
         this.status = status;

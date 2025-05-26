@@ -34,8 +34,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/event/**").permitAll()  // Bypass authentication for /users endpoints
-                        .requestMatchers("/api/event/setup/**").permitAll()  // Bypass authentication for /users endpoints
+                        .requestMatchers("/api/v1/event/users/**").permitAll()  // Bypass authentication for /users endpoints
                         .anyRequest().authenticated()              // Authenticate all other requests
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

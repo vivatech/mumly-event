@@ -66,4 +66,6 @@ public class MumlyEventRequestDto {
     private int maximumNumberOfAttendees;
 
     private String specialInstructions;
+    @NotNull(message = "Created by is required")
+    private String createdBy;
 }

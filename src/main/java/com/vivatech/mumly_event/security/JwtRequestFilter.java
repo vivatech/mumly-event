@@ -57,7 +57,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     private boolean skipURL(String requestURI){
-        List<String> skipURL = Arrays.asList("/api/event/**", "/api/event/setup/**");
+        List<String> skipURL = Arrays.asList("/api/v1/event/users/**");
         AntPathMatcher pathMatcher = new AntPathMatcher();
 
         return skipURL.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
