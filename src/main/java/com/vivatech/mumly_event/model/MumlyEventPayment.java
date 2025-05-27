@@ -1,0 +1,41 @@
+package com.vivatech.mumly_event.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "temp_mumly_event_payment")
+public class MumlyEventPayment {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
+
+    private String msisdn;
+
+    private Double amount;
+
+    private String transactionId;
+
+    private String referenceNo;
+
+    private String paymentMode;
+
+    private String paymentStatus; // e.g. SUCCESS, PENDING, FAILED
+    private String reason;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "event_registration_id")
+    private EventRegistration eventRegistration;
+
+}

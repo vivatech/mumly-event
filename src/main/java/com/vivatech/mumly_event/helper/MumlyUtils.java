@@ -1,4 +1,4 @@
-package com.vivatech.mumly_event.service;
+package com.vivatech.mumly_event.helper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -280,7 +280,7 @@ public class MumlyUtils {
     }
 
 
-    public static String makeDtoToJson(Object object) {
+    public static String makeDtoToJsonString(Object object) {
         ObjectMapper mapper = new ObjectMapper();
         String jsonInString = null;
         try {
@@ -289,5 +289,9 @@ public class MumlyUtils {
             e.printStackTrace();
         }
         return jsonInString;
+    }
+
+    public static String generateRandomString() {
+        return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
     }
 }

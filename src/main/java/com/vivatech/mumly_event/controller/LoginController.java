@@ -1,13 +1,12 @@
 package com.vivatech.mumly_event.controller;
 
-import ch.qos.logback.core.testUtil.RandomUtil;
-import com.vivatech.mumly_event.constenum.EventConstants;
+import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.dto.AuthDto;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.model.MumlyAdmin;
 import com.vivatech.mumly_event.repository.MumlyAdminsRepository;
 import com.vivatech.mumly_event.security.JwtUtil;
-import com.vivatech.mumly_event.service.MumlyUtils;
+import com.vivatech.mumly_event.helper.MumlyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

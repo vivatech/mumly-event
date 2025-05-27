@@ -1,6 +1,6 @@
 package com.vivatech.mumly_event.controller;
 
-import com.vivatech.mumly_event.constenum.EventConstants;
+import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.dto.MumlyEventFilterRequest;
 import com.vivatech.mumly_event.dto.MumlyEventRequestDto;
 import com.vivatech.mumly_event.dto.MumlyEventResponseDto;

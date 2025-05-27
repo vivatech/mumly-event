@@ -1,0 +1,31 @@
+package com.vivatech.mumly_event.payment;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vivatech.mumly_event.helper.MumlyEnums;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class MpaisaCallBackService {
+
+    @Autowired
+    private PaymentService paymentService;
+
+    public void processSTKCallback(MExpressCallbackRequest callback) {
+        MExpressCallbackRequest.StkCallback stkCallback = callback.getBody().getStkCallback();
+        Integer resultCode = stkCallback.getResultCode();
+        String merchantRequestID = stkCallback.getMerchantRequestID();
+        String mPesaReceiptNo = stkCallback.getCallbackMetadata().getItem().stream()
+                .filter(item -> item.getName().equals("MpesaReceiptNumber"))
+                .findFirst().orElse(null)
+                .getValue().toString();
+        boolean isSuccess = resultCode.equals(0);
+        paymentService.processPaymentCallBack(merchantRequestID, mPesaReceiptNo,
+                isSuccess ? MumlyEnums.PaymentStatus.SUCCESS.toString()
+                        : MumlyEnums.PaymentStatus.FAILED.toString());
+    }
+
+}

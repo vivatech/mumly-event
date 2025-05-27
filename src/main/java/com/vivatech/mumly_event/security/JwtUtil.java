@@ -1,7 +1,7 @@
 package com.vivatech.mumly_event.security;
 
 
-import com.vivatech.mumly_event.service.MumlyUtils;
+import com.vivatech.mumly_event.helper.MumlyUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
