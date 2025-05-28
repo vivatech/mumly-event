@@ -39,12 +39,13 @@ public class PaymentService {
         }
     }
 
-    public void processPaymentCallBack(String referenceNo, String transactionId, String paymentStatus) {
+    public void processPaymentCallBack(String referenceNo, String transactionId, String paymentStatus, String reason) {
         MumlyEventPayment payment = paymentRepository.findByReferenceNo(referenceNo);
         if (payment == null) throw new CustomExceptionHandler("Payment not found");
         payment.setTransactionId(transactionId);
         payment.setPaymentStatus(paymentStatus);
         payment.setUpdatedAt(LocalDateTime.now());
+        payment.setReason(reason);
         paymentRepository.save(payment);
     }
 

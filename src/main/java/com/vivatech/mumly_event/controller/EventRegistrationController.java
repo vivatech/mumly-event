@@ -1,6 +1,7 @@
 package com.vivatech.mumly_event.controller;
-import com.vivatech.mumly_event.dto.EventRegistrationRequestDto;
+import com.vivatech.mumly_event.dto.*;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
+import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.helper.MumlyUtils;
 import com.vivatech.mumly_event.model.MumlyEventPayment;
@@ -10,14 +11,16 @@ import java.util.Objects;
 
 import com.vivatech.mumly_event.model.MumlyEvent;
 
-import com.vivatech.mumly_event.dto.EventRegistrationDto;
-import com.vivatech.mumly_event.dto.Response;
 import com.vivatech.mumly_event.model.EventRegistration;
 import com.vivatech.mumly_event.payment.PaymentService;
 import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import com.vivatech.mumly_event.repository.MumlyEventRepository;
+import com.vivatech.mumly_event.service.MumlyEventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +36,8 @@ public class EventRegistrationController {
     private MumlyEventPaymentRepository mumlyEventPaymentRepository;
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private MumlyEventService mumlyEventService;
 
     @PostMapping
     @Transactional
@@ -71,7 +76,21 @@ public class EventRegistrationController {
         MumlyEventPayment payment = mumlyEventPaymentRepository.findByReferenceNo(referenceNo);
         if (payment == null) throw new CustomExceptionHandler("Payment not found");
         String successTransactionId = MumlyUtils.generateRandomString();
-        paymentService.processPaymentCallBack(payment.getReferenceNo(), successTransactionId, MumlyEnums.PaymentStatus.SUCCESS.toString());
+        paymentService.processPaymentCallBack(payment.getReferenceNo(), successTransactionId, MumlyEnums.PaymentStatus.SUCCESS.toString(), null);
         return Response.builder().status(MumlyEnums.PaymentStatus.SUCCESS.toString()).message("Payment received successfully").build();
+    }
+
+    @PostMapping("/filter")
+    public PaginationResponse<EventRegistration> filterEventParticipant(@RequestBody EventRegistrationFilter dto) {
+        int size = dto.getSize() != null ? dto.getSize() : EventConstants.PAGE_SIZE;
+        Pageable pageable = PageRequest.of(dto.getPageNumber() != null ? dto.getPageNumber() : 0, size);
+        Page<EventRegistration> eventPage = eventRegistrationRepository.findAll(mumlyEventService.getEventParticipantsSpecification(dto), pageable);
+        PaginationResponse<EventRegistration> response = new PaginationResponse<>();
+        response.setContent(eventPage.getContent());
+        response.setPage(eventPage.getNumber());
+        response.setSize(eventPage.getSize());
+        response.setTotalElements((int) eventPage.getTotalElements());
+        response.setTotalPages(eventPage.getTotalPages());
+        return response;
     }
 }

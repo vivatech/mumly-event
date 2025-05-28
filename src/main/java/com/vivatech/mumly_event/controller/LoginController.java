@@ -37,7 +37,7 @@ public class LoginController {
         if (mumlyAdmin != null) {
             if (passwordEncoder.matches(authDto.getPassword(), mumlyAdmin.getPassword())) {
                 //TODO: set the otp to the mumlyAdmin entity and send the OTP message
-                int otp = 1000 + (int)(Math.random() * 9000);
+                int otp = EventConstants.SMS_TESTING ? 1234 : 1000 + (int)(Math.random() * 9000);
                 log.info("Type: AUTHENTICATION, Username : {}, OTP: {}", authDto.getUsername(), otp);
                 String formattedOtp = String.format("%04d", otp);
                 mumlyAdmin.setOtp(formattedOtp);

@@ -30,6 +30,15 @@ public class SecurityConfig {
     @Value("${allowed.csrf.origins}")
     private String allowedOrigins;
 
+    private static final String[] SWAGGER_WHITELIST = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/swagger-resources/**",
+            "/webjars/**",
+            "/api-docs/**"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
@@ -38,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/event/users/**").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/api/mpesaCallback").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/api/mpesaCallback/**").permitAll()  // Bypass authentication for /users endpoints
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll()  // Bypass authentication for /users endpoints
                         .anyRequest().authenticated()              // Authenticate all other requests
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
@@ -48,7 +58,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigins));
+        configuration.setAllowedOrigins(List.of(allowedOrigins, "https://50b2-117-194-110-111.ngrok-free.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));

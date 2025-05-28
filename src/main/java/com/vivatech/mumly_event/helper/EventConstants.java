@@ -11,6 +11,13 @@ public class EventConstants {
     public static final Integer PAGE_SIZE = 30;
     public static final Integer OTP_EXPIRY_TIME = 5;
     public static final String DEFAULT_COUNTRY = "KE";
+    public static final Boolean SMS_TESTING;
+
+
+    static {
+        Environment env = ApplicationContextProvider.getApplicationContext().getBean(Environment.class);
+        SMS_TESTING = env.getProperty("sms.testing", "false").equals("true");
+    }
 
 
 

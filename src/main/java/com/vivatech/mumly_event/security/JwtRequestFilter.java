@@ -57,7 +57,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     private boolean skipURL(String requestURI){
-        List<String> skipURL = Arrays.asList("/api/v1/event/users/**", "/api/mpesaCallback", "/api/mpesaCallback/**");
+        List<String> skipURL = Arrays.asList("/api/v1/event/users/**", "/api/mpesaCallback", "/api/mpesaCallback/**",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/swagger-resources/**",
+                "/webjars/**",
+                "/api-docs/**"
+        );
         AntPathMatcher pathMatcher = new AntPathMatcher();
 
         return skipURL.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestURI));

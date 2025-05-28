@@ -2,7 +2,7 @@ package com.vivatech.mumly_event.helper;
 
 public class MumlyEnums {
     public enum EventStatus {
-        SUCCESS, FAILED, PENDING, ACTIVE, COMPLETED, CANCELLED
+        SUCCESS, FAILED, PENDING, ACTIVE, COMPLETED, CANCELLED, APPROVE, REJECT
     }
 
     public enum PaymentAggregator {

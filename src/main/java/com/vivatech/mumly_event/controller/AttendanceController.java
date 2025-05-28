@@ -1,0 +1,60 @@
+package com.vivatech.mumly_event.controller;
+
+import com.vivatech.mumly_event.dto.AttendanceDto;
+import com.vivatech.mumly_event.dto.AttendanceRequestDto;
+import com.vivatech.mumly_event.dto.AttendanceStatus;
+import com.vivatech.mumly_event.dto.AttendanceSummaryDto;
+import com.vivatech.mumly_event.model.Attendance;
+import com.vivatech.mumly_event.model.EventRegistration;
+import com.vivatech.mumly_event.repository.AttendanceRepository;
+import com.vivatech.mumly_event.repository.EventRegistrationRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/v1/event/attendance")
+public class AttendanceController {
+
+    private final EventRegistrationRepository eventRegistrationRepository;
+    private final AttendanceRepository attendanceRepository;
+
+    public AttendanceController(EventRegistrationRepository eventRegistrationRepository,
+                                AttendanceRepository attendanceRepository) {
+        this.eventRegistrationRepository = eventRegistrationRepository;
+        this.attendanceRepository = attendanceRepository;
+    }
+
+    @PostMapping("/submit")
+    public ResponseEntity<?> submitAttendance(@RequestBody AttendanceRequestDto request) {
+        for (AttendanceDto dto : request.getAttendance()) {
+            Optional<EventRegistration> registrationOpt = eventRegistrationRepository.findById(dto.getEventRegistrationId());
+            if (registrationOpt.isPresent()) {
+                Attendance attendance = new Attendance();
+                attendance.setDate(request.getDate());
+                attendance.setPresent(dto.getPresent());
+                attendance.setEventRegistration(registrationOpt.get());
+                attendanceRepository.save(attendance);
+            }
+        }
+        return ResponseEntity.ok("Attendance submitted successfully");
+    }
+
+    @GetMapping("/history/summary")
+    public AttendanceSummaryDto getAttendanceSummary(@RequestParam Integer participantId,
+                                                     @RequestParam LocalDate startDate,
+                                                     @RequestParam LocalDate endDate) {
+        List<Object[]> results = attendanceRepository.getAttendanceSummary(participantId, startDate, endDate);
+        List<AttendanceStatus> statusList = results.stream().map(obj -> new AttendanceStatus(
+                (LocalDate) obj[0],
+                ((Number) obj[1]).intValue(),
+                ((Number) obj[2]).intValue()
+        )).toList();
+        int totalPresent = statusList.stream().mapToInt(AttendanceStatus::getPresentCount).sum();
+        int totalAbsent = statusList.stream().mapToInt(AttendanceStatus::getAbsentCount).sum();
+        return new AttendanceSummaryDto(totalPresent, totalAbsent, statusList);
+    }
+}

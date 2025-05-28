@@ -209,14 +209,10 @@ public class SafariPayment implements PaymentInterface {
                     .body(requestData)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (res, ctx) -> {
-                        res.getAttributes().forEach((key, value) -> {
-                            log.error("Getting 400 error: {}", value.toString());
-                        });
+                        log.error("Getting 400 error: {}", res.getMethod());
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (res, ctx) -> {
-                        res.getAttributes().forEach((key, value) -> {
-                            log.error("Getting 500 error: {}", value.toString());
-                        });
+                        log.error("Getting 500 error: {}", res.getMethod());
                     })
                     .body(String.class);
 

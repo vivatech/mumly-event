@@ -1,9 +1,7 @@
 package com.vivatech.mumly_event.service;
 
+import com.vivatech.mumly_event.dto.*;
 import com.vivatech.mumly_event.helper.EventConstants;
-import com.vivatech.mumly_event.dto.MumlyEventFilterRequest;
-import com.vivatech.mumly_event.dto.MumlyEventRequestDto;
-import com.vivatech.mumly_event.dto.MumlyEventResponseDto;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.model.*;
 import com.vivatech.mumly_event.repository.*;
@@ -255,5 +253,24 @@ public class MumlyEventService {
     public MumlyEvent getEventById(Integer id) {
         MumlyEvent event = mumlyEventRepository.findById(id).orElseThrow(() -> new CustomExceptionHandler("Event not found"));
         return setImagePath(event);
+    }
+
+    public Specification<EventRegistration> getEventParticipantsSpecification(EventRegistrationFilter dto) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filter by Date range
+            if (dto.getStartDate() != null && dto.getEndDate() != null) {
+                predicates.add(criteriaBuilder.between(root.get("startDate"), dto.getStartDate(), dto.getEndDate()));
+            }
+            if (dto.getUsername() != null) {
+                MumlyAdmin exitingUser = mumlyAdminsRepository.findByUsername(dto.getUsername());
+                predicates.add(criteriaBuilder.equal(root.get("selectedEvent").get("createdBy").get("adminId"), exitingUser.getId()));
+            }
+            if (dto.getEventId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("selectedEvent").get("id"), dto.getEventId()));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

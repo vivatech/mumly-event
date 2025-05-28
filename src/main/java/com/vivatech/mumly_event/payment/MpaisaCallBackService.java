@@ -17,15 +17,16 @@ public class MpaisaCallBackService {
     public void processSTKCallback(MExpressCallbackRequest callback) {
         MExpressCallbackRequest.StkCallback stkCallback = callback.getBody().getStkCallback();
         Integer resultCode = stkCallback.getResultCode();
+        String resultDesc = stkCallback.getResultDesc();
         String merchantRequestID = stkCallback.getMerchantRequestID();
-        String mPesaReceiptNo = stkCallback.getCallbackMetadata().getItem().stream()
+        String mPesaReceiptNo = stkCallback.getCallbackMetadata() != null ? stkCallback.getCallbackMetadata().getItem().stream()
                 .filter(item -> item.getName().equals("MpesaReceiptNumber"))
                 .findFirst().orElse(null)
-                .getValue().toString();
+                .getValue().toString() : null;
         boolean isSuccess = resultCode.equals(0);
         paymentService.processPaymentCallBack(merchantRequestID, mPesaReceiptNo,
                 isSuccess ? MumlyEnums.PaymentStatus.SUCCESS.toString()
-                        : MumlyEnums.PaymentStatus.FAILED.toString());
+                        : MumlyEnums.PaymentStatus.FAILED.toString(), resultDesc);
     }
 
 }
