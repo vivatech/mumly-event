@@ -12,7 +12,6 @@ public class EventConstants {
     public static final Integer OTP_EXPIRY_TIME = 5;
     public static final String DEFAULT_COUNTRY = "KE";
     public static final Boolean SMS_TESTING;
-    public static final String UPLOAD_DIR = "uploads";
 
 
     static {

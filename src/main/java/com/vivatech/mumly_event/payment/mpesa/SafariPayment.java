@@ -1,11 +1,16 @@
-package com.vivatech.mumly_event.payment;
+package com.vivatech.mumly_event.payment.mpesa;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vivatech.mumly_event.config.ApplicationContextProvider;
 import com.vivatech.mumly_event.dto.Response;
+import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.helper.MumlyUtils;
+import com.vivatech.mumly_event.model.MumlyEventPayment;
+import com.vivatech.mumly_event.payment.PaymentDto;
+import com.vivatech.mumly_event.payment.PaymentInterface;
+import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -21,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 public class SafariPayment implements PaymentInterface {
+    @Autowired
+    private MumlyEventPaymentRepository mumlyEventPaymentRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -41,6 +48,7 @@ public class SafariPayment implements PaymentInterface {
     public static final String SAFARI_COM_EXPRESS_ACCOUNT_REFERENCE;
     public static final String SAFARI_COM_EXPRESS_TRANSACTION_DESC;
     public static final Boolean SAFARI_COM_EXPRESS_TESTING;
+    public static final String SAFARI_COM_INITIATOR_NAME;
 
     static {
         Environment env = ApplicationContextProvider.getApplicationContext().getBean(Environment.class);
@@ -55,11 +63,12 @@ public class SafariPayment implements PaymentInterface {
         SAFARI_COM_EXPRESS_ACCOUNT_REFERENCE = env.getProperty("safaricom.express.account-ref", "");
         SAFARI_COM_EXPRESS_TRANSACTION_DESC = env.getProperty("safaricom.express.trans-desc", "");
         SAFARI_COM_EXPRESS_TESTING = env.getProperty("payment.testing", "true").equals("true");
+        SAFARI_COM_INITIATOR_NAME = env.getProperty("safaricom.b2c.initiator-name", "testapi");
     }
 
     @Override
     public boolean supports(MumlyEnums.PaymentMode paymentMode) {
-        return paymentMode.equals(MumlyEnums.PaymentMode.MOBILE_MONEY);
+        return paymentMode.equals(MumlyEnums.PaymentMode.MPESA);
     }
 
     @Override
@@ -69,7 +78,12 @@ public class SafariPayment implements PaymentInterface {
 
     @Override
     public Response reversePayment(String msisdn, String transactionId) {
-        return new Response();
+        MumlyEventPayment referenceNo = mumlyEventPaymentRepository.findByReferenceNo(transactionId);
+        if (referenceNo == null) throw new CustomExceptionHandler("Payment not found");
+        referenceNo.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND.toString());
+        mumlyEventPaymentRepository.save(referenceNo);
+        //TODO: Implement B2C mPesa reverse payment
+        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).build();
     }
 
     public HashMap<String, Object> getAccessToken() {

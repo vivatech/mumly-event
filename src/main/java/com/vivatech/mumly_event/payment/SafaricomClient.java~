@@ -1,0 +1,15 @@
+package com.vivatech.mumly_event.payment;
+
+import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.Map;
+
+@FeignClient(name = "safaricomClient", url = "https://sandbox.safaricom.co.ke")
+public interface SafaricomClient {
+
+    @PostMapping("/mpesa/stkpush/v1/processrequest")
+    ResponseEntity<String> initiateStkPush(@RequestBody Map<String, Object> request);
+}

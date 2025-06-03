@@ -1,0 +1,4 @@
+package com.vivatech.mumly_event.dto;
+
+public class EventRegistrationFilter {
+}

@@ -1,0 +1,60 @@
+package com.vivatech.mumly_event.controller;
+
+import com.vivatech.mumly_event.model.EventCategory;
+import com.vivatech.mumly_event.repository.EventCategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/v1/event/category")
+public class EventCategoryController {
+
+    @Autowired
+    private EventCategoryRepository eventCategoryRepository;
+
+    @GetMapping
+    public ResponseEntity<List<EventCategory>> getAllEventCategories() {
+        List<EventCategory> categories = eventCategoryRepository.findAll();
+        return ResponseEntity.ok(categories);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EventCategory> getEventCategoryById(@PathVariable Integer id) {
+        Optional<EventCategory> category = eventCategoryRepository.findById(id);
+        return category.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<EventCategory> createEventCategory(@RequestBody EventCategory eventCategory) {
+        EventCategory createdCategory = eventCategoryRepository.save(eventCategory);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdCategory);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EventCategory> updateEventCategory(@PathVariable Integer id,
+                                                           @RequestBody EventCategory eventCategoryDetails) {
+        Optional<EventCategory> existingCategory = eventCategoryRepository.findById(id);
+        if (existingCategory.isPresent()) {
+            eventCategoryDetails.setId(id);
+            EventCategory updatedCategory = eventCategoryRepository.save(eventCategoryDetails);
+            return ResponseEntity.ok(updatedCategory);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEventCategory(@PathVariable Integer id) {
+        Optional<EventCategory> category = eventCategoryRepository.findById(id);
+        if (category.isPresent()) {
+            eventCategoryRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}

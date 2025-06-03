@@ -61,7 +61,7 @@ public class LoginController {
         if (mumlyAdmin.getOtp().equals(authDto.getOtp())
                 && !MumlyUtils.addMinutesToJavaUtilDate(mumlyAdmin.getCreatedAt(), EventConstants.OTP_EXPIRY_TIME)
                 .isBefore(LocalDateTime.now())) {
-            String token = jwtUtil.generateToken(authDto.getUsername(), 30);
+            String token = jwtUtil.generateToken(authDto.getUsername(), 3000);
             AuthDto dto = new AuthDto("SUCCESS", "OTP verified.");
             dto.setToken(token);
             return dto;

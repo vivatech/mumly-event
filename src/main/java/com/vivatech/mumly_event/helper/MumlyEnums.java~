@@ -18,7 +18,7 @@ public class MumlyEnums {
     }
 
     public enum NotificationType {
-        REGISTRATION, EMERGENCY, PAYMENT, FEEDBACK
+        REGISTRATION, EMERGENCY, PAYMENT
     }
 
 }

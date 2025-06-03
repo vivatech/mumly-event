@@ -21,4 +21,5 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Integer>
     List<Object[]> getAttendanceSummary(Integer participantId, LocalDate startDate, LocalDate endDate);
 
 
+    List<Attendance> findByEventRegistrationId(Integer participantId);
 }

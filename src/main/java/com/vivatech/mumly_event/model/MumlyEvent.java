@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -55,7 +56,7 @@ public class MumlyEvent {
     private int maximumNumberOfAttendees;
     private String specialInstructions;
 
-    @ManyToMany
+    @OneToMany(orphanRemoval = true)
     private List<Tickets> tickets;
 
     @ManyToOne

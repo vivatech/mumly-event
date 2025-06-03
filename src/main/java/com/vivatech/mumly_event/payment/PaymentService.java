@@ -8,6 +8,7 @@ import com.vivatech.mumly_event.dto.Response;
 import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.MumlyEventPayment;
+import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,20 +24,29 @@ public class PaymentService {
     @Autowired
     private MumlyEventPaymentRepository paymentRepository;
 
-    public void processPayment(PaymentDto paymentDto) {
+    @Autowired
+    private NotificationService notificationService;
+
+    public Response processPayment(PaymentDto paymentDto) {
+        Response response = new Response();
         log.info("Processing payment");
         MumlyEventPayment eventPayment = saveNewPaymentEntity(paymentDto);
         Response paymentResponse = paymentGateway.sendPayment(paymentDto, paymentDto.getPaymentMode());
         if (paymentResponse.getStatus().equalsIgnoreCase(MumlyEnums.PaymentStatus.SUCCESS.toString())) {
             String merchantReferenceNumber = (String) paymentResponse.getData();
             eventPayment.setReferenceNo(merchantReferenceNumber);
-            paymentRepository.save(eventPayment);
+            response.setStatus(MumlyEnums.PaymentStatus.SUCCESS.toString());
         } else {
             eventPayment.setPaymentStatus(MumlyEnums.PaymentStatus.FAILED.toString());
             eventPayment.setReason(paymentResponse.getMessage());
             eventPayment.getEventRegistration().setStatus(MumlyEnums.EventStatus.FAILED.toString());
-            paymentRepository.save(eventPayment);
+            response.setStatus(MumlyEnums.PaymentStatus.FAILED.toString());
         }
+        MumlyEventPayment savedPayment = paymentRepository.save(eventPayment);
+        response.setMessage("Reference No: " + savedPayment.getReferenceNo());
+        response.setData(savedPayment.getReferenceNo());
+        notificationService.sendAdminNotification(savedPayment.getId(), MumlyEnums.NotificationType.PAYMENT, null);
+        return response;
     }
 
     public void processPaymentCallBack(String referenceNo, String transactionId, String paymentStatus, String reason) {

@@ -1,8 +1,10 @@
 package com.vivatech.mumly_event.controller;
 
 import com.vivatech.mumly_event.dto.EventFeedbackRequestDto;
+import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.EventFeedback;
 import com.vivatech.mumly_event.model.EventRegistration;
+import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.repository.EventFeedbackRepository;
 import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import org.springframework.http.HttpStatus;
@@ -18,11 +20,14 @@ import java.util.Optional;
 public class EventFeedbackController {
     private final EventFeedbackRepository feedbackRepository;
     private final EventRegistrationRepository registrationRepository;
+    private final NotificationService notificationService;
 
     public EventFeedbackController(EventFeedbackRepository feedbackRepository,
-                                   EventRegistrationRepository registrationRepository) {
+                                   EventRegistrationRepository registrationRepository,
+                                   NotificationService notificationService) {
         this.feedbackRepository = feedbackRepository;
         this.registrationRepository = registrationRepository;
+        this.notificationService = notificationService;
     }
 
     @PostMapping
@@ -41,7 +46,9 @@ public class EventFeedbackController {
         feedback.setEventRegistration(registrationOpt.get());
         feedback.setCreatedAt(LocalDateTime.now());
 
-        feedbackRepository.save(feedback);
+        EventFeedback savedFeedback = feedbackRepository.save(feedback);
+
+        notificationService.sendAdminNotification(savedFeedback.getId(), MumlyEnums.NotificationType.FEEDBACK, savedFeedback.getMessage());
 
         return ResponseEntity.ok("Feedback submitted successfully");
     }

@@ -83,7 +83,7 @@ public class EventRegistrationController {
         eventRegistration.setStatus(MumlyEnums.EventStatus.PENDING.toString());
         eventRegistration.setCreatedAt(LocalDateTime.now());
         EventRegistration savedRegistration = eventRegistrationRepository.save(eventRegistration);
-        notificationService.sendAdminNotification(savedRegistration.getId(), MumlyEnums.NotificationType.REGISTRATION, null);
+        notificationService.sendAdminNotification(savedRegistration.getId(), MumlyEnums.NotificationType.REGISTRATION);
         requestDto.getPaymentDto().setEventRegistrationId(savedRegistration.getId());
         Response response = paymentService.processPayment(requestDto.getPaymentDto());
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build();

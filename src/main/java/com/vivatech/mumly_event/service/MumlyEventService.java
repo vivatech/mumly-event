@@ -1,9 +1,13 @@
 package com.vivatech.mumly_event.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vivatech.mumly_event.dto.*;
 import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
+import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.*;
+import com.vivatech.mumly_event.payment.PaymentGatewayProcessor;
 import com.vivatech.mumly_event.repository.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -31,18 +35,27 @@ public class MumlyEventService {
     private final TicketsRepository ticketsRepository;
     private final MumlyAdminsRepository mumlyAdminsRepository;
     private final MumlyEventOrganizerRepository mumlyEventOrganizerRepository;
+    private final EventRegistrationRepository eventRegistrationRepository;
+    private final MumlyEventPaymentRepository mumlyEventPaymentRepository;
+    private final PaymentGatewayProcessor paymentGateway;
 
     public MumlyEventService(EventCategoryRepository eventCategoryRepository, FileStorageService fileStorageService,
                              MumlyEventRepository mumlyEventRepository,
                              TicketsRepository ticketsRepository,
                              MumlyAdminsRepository mumlyAdminsRepository,
-                             MumlyEventOrganizerRepository mumlyEventOrganizerRepository) {
+                             MumlyEventOrganizerRepository mumlyEventOrganizerRepository,
+                             EventRegistrationRepository eventRegistrationRepository,
+                             MumlyEventPaymentRepository mumlyEventPaymentRepository,
+                             PaymentGatewayProcessor paymentGateway) {
         this.eventCategoryRepository = eventCategoryRepository;
         this.fileStorageService = fileStorageService;
         this.mumlyEventRepository = mumlyEventRepository;
         this.ticketsRepository = ticketsRepository;
         this.mumlyAdminsRepository = mumlyAdminsRepository;
         this.mumlyEventOrganizerRepository = mumlyEventOrganizerRepository;
+        this.eventRegistrationRepository = eventRegistrationRepository;
+        this.mumlyEventPaymentRepository = mumlyEventPaymentRepository;
+        this.paymentGateway = paymentGateway;
     }
 
     @Transactional
@@ -127,14 +140,34 @@ public class MumlyEventService {
         event.setOrganizerPhoneNumber(dto.getOrganizerPhoneNumber());
         event.setMaximumNumberOfAttendees(dto.getMaximumNumberOfAttendees());
         event.setSpecialInstructions(dto.getSpecialInstructions());
-        List<Tickets> tickets = new ArrayList<>();
-        if (!ObjectUtils.isEmpty(dto.getTickets())) {
-            for (String ticket : dto.getTickets().split(",")) {
-                Tickets existingTicket = ticketsRepository.findByTicketType(ticket.trim());
-                if (existingTicket != null) tickets.add(existingTicket);
+        String ticketsString = dto.getTickets();
+        try {
+            List<Tickets> dtoTickets = new ObjectMapper().readValue(ticketsString, new TypeReference<List<Tickets>>() {});
+            if (event.getTickets() != null && !event.getTickets().isEmpty()){
+                List<Integer> ticketIds = event.getTickets().stream().map(Tickets::getId).toList();
+                event.getTickets().clear();
+                ticketsRepository.deleteAllById(ticketIds);
+                List<Tickets> ticketEntities = dtoTickets.stream()
+                        .map(t -> {
+                            Tickets ticket = new Tickets();
+                            ticket.setTicketType(t.getTicketType());
+                            ticket.setTicketPrice(t.getTicketPrice());
+                            return ticketsRepository.save(ticket);
+                        }).toList();
+                event.getTickets().addAll(ticketEntities);
+            } else {
+                List<Tickets> ticketEntities = dtoTickets.stream()
+                        .map(t -> {
+                            Tickets ticket = new Tickets();
+                            ticket.setTicketType(t.getTicketType());
+                            ticket.setTicketPrice(t.getTicketPrice());
+                            return ticketsRepository.save(ticket);
+                        }).toList();
+                event.setTickets(ticketEntities);
             }
+        } catch (Exception e) {
+            throw new CustomExceptionHandler(e.getMessage());
         }
-        event.setTickets(tickets);
         MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(exitingUser.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
         if (event.getId() == null) {
             event.setCreatedAt(LocalDate.now());
@@ -153,13 +186,15 @@ public class MumlyEventService {
         mumlyEvent.setEventPicture(!ObjectUtils.isEmpty(eventPicture) ? EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + eventPicture : null);
         mumlyEvent.setEventBrochure(!ObjectUtils.isEmpty(eventBrochure) ? EventConstants.EVENT_BROCHURE + mumlyEvent.getId() + "/" + eventBrochure : null);
         mumlyEvent.setEventCoverImage(!ObjectUtils.isEmpty(eventCoverImage) ? EventConstants.EVENT_COVER_PICTURE + mumlyEvent.getId() + "/" + eventCoverImage : null);
-        List<String> eventPictureListString = mumlyEvent.getEventPictureList();
-        List<String> eventPictureList = new ArrayList<>();
-        for (String imageName : eventPictureListString) {
-            String filePath = EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + imageName;
-            eventPictureList.add(filePath);
+        List<String> eventPictureListString = mumlyEvent.getEventPictureList() != null ? mumlyEvent.getEventPictureList() : new ArrayList<>();
+        if (!eventPictureListString.isEmpty()) {
+            List<String> eventPictureList = new ArrayList<>();
+            for (String imageName : eventPictureListString) {
+                String filePath = EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId() + "/" + imageName;
+                eventPictureList.add(filePath);
+            }
+            mumlyEvent.setEventPictureList(eventPictureList);
         }
-        mumlyEvent.setEventPictureList(eventPictureList);
         return mumlyEvent;
     }
 
@@ -237,7 +272,7 @@ public class MumlyEventService {
                 predicates.add(criteriaBuilder.between(root.get("startDate"), dto.getStartDate(), dto.getEndDate()));
             }
 
-            if (dto.getUsername() != null) {
+            if (!ObjectUtils.isEmpty(dto.getUsername())) {
                 MumlyAdmin exitingUser = mumlyAdminsRepository.findByUsername(dto.getUsername());
                 MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(exitingUser.getId()).orElse(null);
                 if (organizer != null) {
@@ -272,5 +307,20 @@ public class MumlyEventService {
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    public Response cancelEvent(Integer eventId, String reason) {
+        MumlyEvent event = mumlyEventRepository.findById(eventId).orElseThrow(() -> new CustomExceptionHandler("Event not found"));
+        List<EventRegistration> registrationList = eventRegistrationRepository.findBySelectedEvent(event);
+        for (EventRegistration registration : registrationList) {
+            registration.setStatus(MumlyEnums.EventStatus.CANCELLED.toString());
+            registration.setReason(reason);
+            eventRegistrationRepository.save(registration);
+            MumlyEventPayment payment = mumlyEventPaymentRepository.findByEventRegistration(registration);
+            paymentGateway.refundPayment(payment.getMsisdn(), payment.getTransactionId(), MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()));
+            //TODO: Send the notification to the registered participant
+        }
+
+        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event cancelled and payment refund success.").build();
     }
 }

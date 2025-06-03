@@ -45,6 +45,14 @@ public class MumlyUtils {
         return calendar.getTime();
     }
 
+    public static String formatLocalDateToString(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        return date.format(formatter);
+    }
+
     public static Date getEndDateOfCurrentMonth() {
         // Create a Calendar instance and set it to the current date
         Calendar calendar = Calendar.getInstance();

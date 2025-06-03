@@ -1,12 +1,10 @@
 package com.vivatech.mumly_event.controller;
 
+import com.vivatech.mumly_event.dto.*;
 import com.vivatech.mumly_event.helper.EventConstants;
-import com.vivatech.mumly_event.dto.MumlyEventFilterRequest;
-import com.vivatech.mumly_event.dto.MumlyEventRequestDto;
-import com.vivatech.mumly_event.dto.MumlyEventResponseDto;
-import com.vivatech.mumly_event.dto.PaginationResponse;
 import com.vivatech.mumly_event.model.MumlyEvent;
 import com.vivatech.mumly_event.service.MumlyEventService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +23,7 @@ public class MumlyEventController {
     private MumlyEventService service;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createEvent(@ModelAttribute MumlyEventRequestDto eventRequestDto) throws IOException {
+    public ResponseEntity<String> createEvent(@Valid @ModelAttribute MumlyEventRequestDto eventRequestDto) throws IOException {
         service.saveEvent(eventRequestDto, eventRequestDto.getEventCoverImageFile(), eventRequestDto.getEventPictureUpload(), eventRequestDto.getEventBrochureFile());
         return ResponseEntity.ok( eventRequestDto.getId() == null ? "Event created successfully!" : "Event updated successfully!");
     }
@@ -39,6 +37,11 @@ public class MumlyEventController {
     public ResponseEntity<String> deleteEvent(@PathVariable Integer eventId) {
         service.deleteEvent(eventId);
         return ResponseEntity.ok("Event deleted successfully!");
+    }
+
+    @GetMapping("/cancel/{eventId}")
+    public Response cancelEvent(@PathVariable Integer eventId, @RequestParam String reason) {
+        return service.cancelEvent(eventId, reason);
     }
 
     @PostMapping("/filter")

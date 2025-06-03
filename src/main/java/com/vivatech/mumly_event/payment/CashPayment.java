@@ -3,14 +3,10 @@ package com.vivatech.mumly_event.payment;
 import com.vivatech.mumly_event.dto.Response;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.helper.MumlyUtils;
-import com.vivatech.mumly_event.model.EventRegistration;
-import com.vivatech.mumly_event.model.MumlyEventPayment;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service

@@ -1,4 +1,4 @@
-package com.vivatech.mumly_event.payment;
+package com.vivatech.mumly_event.payment.mpesa;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vivatech.mumly_event.helper.MumlyUtils;
@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Locale;
 
 @Slf4j
 @RestController

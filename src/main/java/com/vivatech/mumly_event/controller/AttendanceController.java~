@@ -53,12 +53,9 @@ public class AttendanceController {
                 ((Number) obj[1]).intValue(),
                 ((Number) obj[2]).intValue()
         )).toList();
-
-        //Calculating total present and total absent
         List<Attendance> attendances = attendanceRepository.findByEventRegistrationId(participantId);
         int totalPresent = attendances.stream().mapToInt(ele -> ele.getPresent() ? 1 : 0).sum();
         int totalAbsent = attendances.stream().mapToInt(ele -> !ele.getPresent() ? 1 : 0).sum();
-
         return new AttendanceSummaryDto(totalPresent, totalAbsent, statusList);
     }
 }
