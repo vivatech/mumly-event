@@ -48,11 +48,12 @@ public class AttendanceController {
                                                      @RequestParam LocalDate startDate,
                                                      @RequestParam LocalDate endDate) {
         List<Object[]> results = attendanceRepository.getAttendanceSummary(participantId, startDate, endDate);
-        List<AttendanceStatus> statusList = results.stream().map(obj -> new AttendanceStatus(
-                (LocalDate) obj[0],
-                ((Number) obj[1]).intValue(),
-                ((Number) obj[2]).intValue()
-        )).toList();
+        List<AttendanceStatus> statusList = results.stream()
+                .map(obj -> AttendanceStatus.builder()
+                        .date((LocalDate) obj[0])
+                        .presentCount(((Number) obj[1]).intValue())
+                        .absentCount(((Number) obj[2]).intValue())
+                        .build()).toList();
 
         //Calculating total present and total absent
         List<Attendance> attendances = attendanceRepository.findByEventRegistrationId(participantId);

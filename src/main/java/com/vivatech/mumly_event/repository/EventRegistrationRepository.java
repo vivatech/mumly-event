@@ -15,4 +15,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     Page<EventRegistration> findAll(Specification<EventRegistration> eventSpecification, Pageable pageable);
 
     List<EventRegistration> findBySelectedEvent(MumlyEvent event);
+
+    Integer countBySelectedEventIn(List<MumlyEvent> eventList);
+
+    List<EventRegistration> findBySelectedEventIdIn(List<Integer> eventIds);
 }

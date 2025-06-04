@@ -1,6 +1,7 @@
 package com.vivatech.mumly_event.repository;
 
 import com.vivatech.mumly_event.model.Attendance;
+import com.vivatech.mumly_event.model.EventRegistration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Integer>
 
 
     List<Attendance> findByEventRegistrationId(Integer participantId);
+
+    List<Attendance> findByEventRegistrationIn(List<EventRegistration> registrations);
 }

@@ -7,7 +7,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface MumlyEventRepository extends JpaRepository<MumlyEvent, Integer> {
     Page<MumlyEvent> findAll(Specification<MumlyEvent> eventSpecification, Pageable pageable);
+
+    List<MumlyEvent> findByCreatedById(Integer id);
 }
