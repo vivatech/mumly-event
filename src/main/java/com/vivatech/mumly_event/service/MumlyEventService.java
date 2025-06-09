@@ -11,6 +11,7 @@ import com.vivatech.mumly_event.payment.PaymentGatewayProcessor;
 import com.vivatech.mumly_event.repository.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -304,6 +305,9 @@ public class MumlyEventService {
             }
             if (dto.getEventId() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("selectedEvent").get("id"), dto.getEventId()));
+            }
+            if (!StringUtils.isEmpty(dto.getParticipantPhone())) {
+                predicates.add(criteriaBuilder.equal(root.get("participantPhone"), dto.getParticipantPhone()));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

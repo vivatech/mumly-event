@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/event/users/**").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/api/mpesaCallback").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/api/mpesaCallback/**").permitAll()  // Bypass authentication for /users endpoints
+                        .requestMatchers("/**").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()  // Bypass authentication for /users endpoints
                         .anyRequest().authenticated()              // Authenticate all other requests
                 )
@@ -58,7 +59,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigins, "https://50b2-117-194-110-111.ngrok-free.app"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins, "*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));

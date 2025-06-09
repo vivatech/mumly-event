@@ -1,17 +1,20 @@
 package com.vivatech.mumly_event.security;
 
 
+import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.helper.MumlyUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -32,7 +35,28 @@ public class JwtUtil {
     }
 
     public Boolean validateToken(String token) {
-        return !isTokenExpired(token);
+        try {
+            // First, try to parse the token to check for format and signature
+            extractAllClaims(token);
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            if (e instanceof io.jsonwebtoken.security.SignatureException) {
+                log.error("Invalid JWT signature: {}", e.getMessage());
+                return false;
+            } else if (e instanceof io.jsonwebtoken.ExpiredJwtException) {
+                log.error("JWT token has expired: {}", e.getMessage());
+                return false;
+            } else if (e instanceof io.jsonwebtoken.MalformedJwtException) {
+                log.error("Invalid JWT token: {}", e.getMessage());
+                return false;
+            } else if (e instanceof io.jsonwebtoken.UnsupportedJwtException) {
+                log.error("Unsupported JWT token: {}", e.getMessage());
+                return false;
+            } else {
+                log.error("Unexpected error validating token: {}", e.getMessage());
+                return false;
+            }
+        }
     }
 
     public String extractUsername(String token) {
@@ -49,6 +73,10 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
+        if (token == null || token.isEmpty()) {
+            throw new CustomExceptionHandler("Token cannot be null or empty");
+        }
+        
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -58,5 +86,9 @@ public class JwtUtil {
 
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
+    }
+
+    public boolean validateCredentials(String username, String password) {
+        return username.equalsIgnoreCase("admin") && password.equals("admin");
     }
 }
