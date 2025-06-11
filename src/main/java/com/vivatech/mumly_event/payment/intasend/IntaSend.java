@@ -40,7 +40,7 @@ public class IntaSend implements PaymentInterface {
 
     @Override
     public boolean supports(MumlyEnums.PaymentMode paymentMode) {
-        return paymentMode.equals(MumlyEnums.PaymentMode.INTA_SEND);
+        return paymentMode.equals(MumlyEnums.PaymentMode.MPESA);
     }
 
     @Override

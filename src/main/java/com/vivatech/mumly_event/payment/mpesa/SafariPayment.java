@@ -68,7 +68,7 @@ public class SafariPayment implements PaymentInterface {
 
     @Override
     public boolean supports(MumlyEnums.PaymentMode paymentMode) {
-        return paymentMode.equals(MumlyEnums.PaymentMode.MPESA);
+        return paymentMode.equals(MumlyEnums.PaymentMode.SAFARI_COM);
     }
 
     @Override

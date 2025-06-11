@@ -10,7 +10,7 @@ public class MumlyEnums {
     }
 
     public enum PaymentMode {
-        CASH, BANK_TRANSFER, MPESA, INTA_SEND
+        CASH, BANK_TRANSFER, MPESA, INTA_SEND, SAFARI_COM
     }
 
     public enum PaymentStatus {
