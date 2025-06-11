@@ -15,7 +15,9 @@ import com.vivatech.mumly_event.model.MumlyEvent;
 
 import com.vivatech.mumly_event.model.EventRegistration;
 import com.vivatech.mumly_event.notification.NotificationService;
+import com.vivatech.mumly_event.payment.PaymentDto;
 import com.vivatech.mumly_event.payment.PaymentService;
+import com.vivatech.mumly_event.payment.intasend.RefundTicketDto;
 import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import com.vivatech.mumly_event.repository.MumlyEventRepository;
@@ -257,5 +259,10 @@ public class EventRegistrationController {
         response.setTotalElements((int) eventPage.getTotalElements());
         response.setTotalPages(eventPage.getTotalPages());
         return response;
+    }
+
+    @PostMapping("/refund")
+    public Response refundTicket(@RequestBody PaymentDto dto) {
+        return paymentService.refundTicket(dto);
     }
 }

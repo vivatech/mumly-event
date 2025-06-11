@@ -2,6 +2,7 @@ package com.vivatech.mumly_event.repository;
 
 import com.vivatech.mumly_event.model.EventRegistration;
 import com.vivatech.mumly_event.model.MumlyEvent;
+import com.vivatech.mumly_event.model.Tickets;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,4 +20,7 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     Integer countBySelectedEventIn(List<MumlyEvent> eventList);
 
     List<EventRegistration> findBySelectedEventIdIn(List<Integer> eventIds);
+
+    Integer countByTicketsIn(List<Tickets> tickets);
+
 }

@@ -27,4 +27,8 @@ public class MumlyEventResponseDto {
     private Integer soldTickets;
     private Integer availableTickets;
     private String eventCoverImage;
+    private String eventBrochure;
+    private String eventOrganiserName;
+    private String eventOrganiserPhone;
+    private String eventCreatedBy;
 }

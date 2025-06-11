@@ -96,7 +96,20 @@ public class NotificationService {
                 .filter(ele -> ele.getStatus().equalsIgnoreCase(MumlyEnums.EventStatus.APPROVE.toString()))
                 .toList();
         for (EventRegistration participant : participants) {
-
+            AdminNotification notification = new AdminNotification();
+            notification.setMessage(message);
+            notification.setType(NotificationType.EMERGENCY.toString());
+            notification.setRead(false);
+            notification.setSenderMsisdn(participant.getSelectedEvent().getOrganizerPhoneNumber());
+            notification.setReceiverMsisdn(participant.getParticipantPhone());
+            notification.setSenderEmil(participant.getSelectedEvent().getOrganizerContactEmail());
+            notification.setReceiverEmail(participant.getParticipantEmail());
+            notification.setEmailSentStatus(MumlyEnums.EventStatus.PENDING.toString());
+            notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
+            notification.setRetryCount(0);
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setOrganizer(participant.getSelectedEvent().getCreatedBy());
+            adminNotificationRepository.save(notification);
         }
     }
 

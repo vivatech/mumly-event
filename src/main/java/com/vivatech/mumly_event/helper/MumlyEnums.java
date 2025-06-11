@@ -10,11 +10,11 @@ public class MumlyEnums {
     }
 
     public enum PaymentMode {
-        CASH, DIGITAL_WALLET, BNPL, BANK_TRANSFER, MPESA, CARD
+        CASH, BANK_TRANSFER, MPESA, INTA_SEND
     }
 
     public enum PaymentStatus {
-        SUCCESS, FAILED, PENDING, CANCELLED, REFUND
+        SUCCESS, FAILED, PENDING, CANCELLED, REFUND, REFUND_FAILED
     }
 
     public enum NotificationType {

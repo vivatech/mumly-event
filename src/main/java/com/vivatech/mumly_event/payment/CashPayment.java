@@ -26,7 +26,7 @@ public class CashPayment implements PaymentInterface {
     }
 
     @Override
-    public Response reversePayment(String msisdn, String transactionId) {
+    public Response reversePayment(PaymentDto dto) {
         return null;
     }
 }

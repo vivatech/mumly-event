@@ -9,6 +9,7 @@ import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.MumlyEventPayment;
 import com.vivatech.mumly_event.notification.NotificationService;
+import com.vivatech.mumly_event.payment.intasend.RefundTicketDto;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class PaymentService {
         Response response = new Response();
         log.info("Processing payment");
         MumlyEventPayment eventPayment = saveNewPaymentEntity(paymentDto);
+        paymentDto.setReferenceNo(eventPayment.getReferenceNo());
         Response paymentResponse = paymentGateway.sendPayment(paymentDto, paymentDto.getPaymentMode());
         if (paymentResponse.getStatus().equalsIgnoreCase(MumlyEnums.PaymentStatus.SUCCESS.toString())) {
             String merchantReferenceNumber = (String) paymentResponse.getData();
@@ -71,5 +73,28 @@ public class PaymentService {
         eventRegistration.setId(paymentDto.getEventRegistrationId());
         payment.setEventRegistration(eventRegistration);
         return paymentRepository.save(payment);
+    }
+
+    public Response refundTicket(PaymentDto dto) {
+        MumlyEventPayment payment = paymentRepository.findByTransactionId(dto.getTransactionId());
+        dto.setPaymentMode(MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()));
+        dto.setMsisdn(payment.getMsisdn());
+        dto.setEventRegistrationId(payment.getEventRegistration().getId());
+
+        MumlyEventPayment refundPayment = saveNewPaymentEntity(dto);
+        refundPayment.setReferenceNo(payment.getTransactionId());
+
+        Response response = paymentGateway.refundPayment(dto, dto.getPaymentMode());
+        if (response.getStatus().equalsIgnoreCase(MumlyEnums.PaymentStatus.SUCCESS.toString())) {
+            refundPayment.setTransactionId((String) response.getData());
+            refundPayment.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND.toString());
+            refundPayment.setUpdatedAt(LocalDateTime.now());
+            refundPayment.setReason(dto.getReason());
+        } else {
+            refundPayment.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND_FAILED.toString());
+            refundPayment.setReason(response.getMessage());
+        }
+        paymentRepository.save(refundPayment);
+        return response;
     }
 }

@@ -7,7 +7,10 @@ import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.*;
+import com.vivatech.mumly_event.notification.NotificationService;
+import com.vivatech.mumly_event.payment.PaymentDto;
 import com.vivatech.mumly_event.payment.PaymentGatewayProcessor;
+import com.vivatech.mumly_event.payment.PaymentService;
 import com.vivatech.mumly_event.repository.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -39,6 +42,8 @@ public class MumlyEventService {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final MumlyEventPaymentRepository mumlyEventPaymentRepository;
     private final PaymentGatewayProcessor paymentGateway;
+    private final NotificationService notificationService;
+    private final PaymentService paymentService;
 
     public MumlyEventService(EventCategoryRepository eventCategoryRepository, FileStorageService fileStorageService,
                              MumlyEventRepository mumlyEventRepository,
@@ -47,7 +52,7 @@ public class MumlyEventService {
                              MumlyEventOrganizerRepository mumlyEventOrganizerRepository,
                              EventRegistrationRepository eventRegistrationRepository,
                              MumlyEventPaymentRepository mumlyEventPaymentRepository,
-                             PaymentGatewayProcessor paymentGateway) {
+                             PaymentGatewayProcessor paymentGateway, NotificationService notificationService, PaymentService paymentService) {
         this.eventCategoryRepository = eventCategoryRepository;
         this.fileStorageService = fileStorageService;
         this.mumlyEventRepository = mumlyEventRepository;
@@ -57,6 +62,8 @@ public class MumlyEventService {
         this.eventRegistrationRepository = eventRegistrationRepository;
         this.mumlyEventPaymentRepository = mumlyEventPaymentRepository;
         this.paymentGateway = paymentGateway;
+        this.notificationService = notificationService;
+        this.paymentService = paymentService;
     }
 
     @Transactional
@@ -145,17 +152,26 @@ public class MumlyEventService {
         try {
             List<Tickets> dtoTickets = new ObjectMapper().readValue(ticketsString, new TypeReference<List<Tickets>>() {});
             if (event.getTickets() != null && !event.getTickets().isEmpty()){
-                List<Integer> ticketIds = event.getTickets().stream().map(Tickets::getId).toList();
-                event.getTickets().clear();
-                ticketsRepository.deleteAllById(ticketIds);
-                List<Tickets> ticketEntities = dtoTickets.stream()
-                        .map(t -> {
-                            Tickets ticket = new Tickets();
-                            ticket.setTicketType(t.getTicketType());
-                            ticket.setTicketPrice(t.getTicketPrice());
-                            return ticketsRepository.save(ticket);
-                        }).toList();
-                event.getTickets().addAll(ticketEntities);
+                for (Tickets dtoTicket : dtoTickets) {
+                    boolean ticketTypeChange = event.getTickets().stream().anyMatch(ele -> !ele.getTicketType().equalsIgnoreCase(dtoTicket.getTicketType()));
+                    boolean ticketPriceChange = event.getTickets().stream().anyMatch(ele -> ele.getTicketPrice() != dtoTicket.getTicketPrice());
+                    if (ticketTypeChange || ticketPriceChange) {
+                        Integer registrationList = eventRegistrationRepository.countByTicketsIn(event.getTickets());
+                        if (registrationList > 0) throw new CustomExceptionHandler("Ticket type or price cannot be changed as tickets are already registered");
+                        List<Integer> ticketIds = event.getTickets().stream().map(Tickets::getId).toList();
+                        event.getTickets().clear();
+                        ticketsRepository.deleteAllById(ticketIds);
+                        List<Tickets> ticketEntities = dtoTickets.stream()
+                                .map(t -> {
+                                    Tickets ticket = new Tickets();
+                                    ticket.setTicketType(t.getTicketType());
+                                    ticket.setTicketPrice(t.getTicketPrice());
+                                    return ticketsRepository.save(ticket);
+                                }).toList();
+                        event.getTickets().addAll(ticketEntities);
+                    }
+
+                }
             } else {
                 List<Tickets> ticketEntities = dtoTickets.stream()
                         .map(t -> {
@@ -250,6 +266,10 @@ public class MumlyEventService {
         dto.setSoldTickets(soldTickets);
         dto.setAvailableTickets(mumlyEvent.getMaximumNumberOfAttendees() - dto.getSoldTickets());
         dto.setEventCoverImage(mumlyEvent.getEventCoverImage());
+        dto.setEventBrochure(mumlyEvent.getEventBrochure());
+        dto.setEventOrganiserName(mumlyEvent.getOrganizerName());
+        dto.setEventOrganiserPhone(mumlyEvent.getOrganizerPhoneNumber());
+        dto.setEventCreatedBy(mumlyEvent.getCreatedBy().getOrganizerName());
         return dto;
     }
 
@@ -321,9 +341,18 @@ public class MumlyEventService {
             registration.setReason(reason);
             eventRegistrationRepository.save(registration);
             MumlyEventPayment payment = mumlyEventPaymentRepository.findByEventRegistration(registration);
-            paymentGateway.refundPayment(payment.getMsisdn(), payment.getTransactionId(), MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()));
-            //TODO: Send the notification to the registered participant
+            PaymentDto paymentDto = PaymentDto.builder()
+                    .transactionId(payment.getTransactionId())
+                    .amount(payment.getAmount())
+                    .reason(reason)
+                    .paymentMode(MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()))
+                    .msisdn(payment.getMsisdn())
+                    .eventRegistrationId(payment.getEventRegistration().getId())
+                    .build();
+            paymentService.refundTicket(paymentDto);
         }
+        //TODO: Send the notification to the registered participant
+        notificationService.sendAdminNotification(eventId, MumlyEnums.NotificationType.EMERGENCY, reason);
 
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event cancelled and payment refund success.").build();
     }

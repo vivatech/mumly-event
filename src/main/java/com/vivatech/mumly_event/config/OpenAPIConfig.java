@@ -15,13 +15,12 @@ public class OpenAPIConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-                .components(new Components().addSecuritySchemes("BearerAuth",
+                .addSecurityItem(new SecurityRequirement().addList("BasicAuth"))
+                .components(new Components().addSecuritySchemes("BasicAuth",
                         new SecurityScheme()
-                                .name("BearerAuth")
+                                .name("BasicAuth")
                                 .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
+                                .scheme("basic")
                 ))
                 .info(new Info().title("Mumly Event Management System")
                 .version("v1")

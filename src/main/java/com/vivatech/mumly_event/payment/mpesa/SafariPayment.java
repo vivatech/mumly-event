@@ -77,8 +77,8 @@ public class SafariPayment implements PaymentInterface {
     }
 
     @Override
-    public Response reversePayment(String msisdn, String transactionId) {
-        MumlyEventPayment referenceNo = mumlyEventPaymentRepository.findByReferenceNo(transactionId);
+    public Response reversePayment(PaymentDto dto) {
+        MumlyEventPayment referenceNo = mumlyEventPaymentRepository.findByReferenceNo(dto.getTransactionId());
         if (referenceNo == null) throw new CustomExceptionHandler("Payment not found");
         referenceNo.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND.toString());
         mumlyEventPaymentRepository.save(referenceNo);

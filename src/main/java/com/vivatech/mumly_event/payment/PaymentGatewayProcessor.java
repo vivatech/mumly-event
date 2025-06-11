@@ -29,9 +29,9 @@ public class PaymentGatewayProcessor {
         return matchedProcessor.sendPayment(paymentDto);
     }
 
-    public Response refundPayment(String msisdn, String transactionId, MumlyEnums.PaymentMode paymentMode){
+    public Response refundPayment(PaymentDto dto, MumlyEnums.PaymentMode paymentMode){
         PaymentInterface matchedProcessor = getMatchedProcessor(paymentMode);
-        return matchedProcessor.reversePayment(msisdn, transactionId);
+        return matchedProcessor.reversePayment(dto);
     }
 
     public MumlyEnums.PaymentAggregator getPaymentAggregator(String country) {

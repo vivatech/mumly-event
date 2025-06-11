@@ -17,5 +17,6 @@ public class PaymentDto {
     private String referenceNo;
     private MumlyEnums.PaymentMode paymentMode;
     private Integer eventRegistrationId;
+    private String reason;
 
 }

@@ -72,6 +72,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private boolean skipURL(String requestURI){
         List<String> skipURL = Arrays.asList("/api/v1/event/users/**", "/api/mpesaCallback", "/api/mpesaCallback/**",
+                "/api/intasend/webhook",
+                "/api/intasend/webhook/**",
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html",

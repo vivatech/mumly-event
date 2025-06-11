@@ -51,7 +51,7 @@ public class MumlyEventRequestDto {
     private String organizerContactEmail;
 
     @NotNull(message = "Organizer phone number is required")
-    @Pattern(regexp = "^[0-9]{10}$", message = "Invalid phone number format")
+    @Pattern(regexp = "^\\+?[0-9]{12}$", message = "Invalid phone number format")
     private String organizerPhoneNumber;
 
     private String tickets;

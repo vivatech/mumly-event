@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/event/users/**").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/api/mpesaCallback").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/api/mpesaCallback/**").permitAll()  // Bypass authentication for /users endpoints
+                        .requestMatchers("/api/intasend/webhook").permitAll()  // Bypass authentication for /users endpoints
+                        .requestMatchers("/api/intasend/webhook/**").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers("/**").permitAll()  // Bypass authentication for /users endpoints
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()  // Bypass authentication for /users endpoints
                         .anyRequest().authenticated()              // Authenticate all other requests

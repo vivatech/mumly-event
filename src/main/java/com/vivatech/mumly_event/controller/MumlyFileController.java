@@ -1,6 +1,7 @@
 package com.vivatech.mumly_event.controller;
 
 import com.vivatech.mumly_event.dto.Response;
+import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,5 +50,19 @@ public class MumlyFileController {
             responseDto.setMessage("File not found!");
         }
         return responseDto;
+    }
+
+    @GetMapping("/download-file-bytes")
+    public byte[] downloadFileAsBytes(@RequestParam String filePath) {
+        try {
+            // Get the file bytes
+            Path fullPath = Paths.get(UPLOAD_DIR + "/" + filePath);
+
+            // Read the file from the given file path
+            return Files.readAllBytes(fullPath);
+
+        } catch (Exception e) {
+            throw new CustomExceptionHandler("File not found!");
+        }
     }
 }
