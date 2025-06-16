@@ -9,6 +9,8 @@ import com.vivatech.mumly_event.helper.MumlyUtils;
 import com.vivatech.mumly_event.model.MumlyEventPayment;
 import com.vivatech.mumly_event.model.Tickets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import com.vivatech.mumly_event.model.MumlyEvent;
@@ -17,7 +19,6 @@ import com.vivatech.mumly_event.model.EventRegistration;
 import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.payment.PaymentDto;
 import com.vivatech.mumly_event.payment.PaymentService;
-import com.vivatech.mumly_event.payment.intasend.RefundTicketDto;
 import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import com.vivatech.mumly_event.repository.MumlyEventRepository;
@@ -91,7 +92,7 @@ public class EventRegistrationController {
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build();
     }
 
-    @GetMapping("/{id}")
+    @PutMapping("/{id}")
     public Response updateParticipantStatus(@PathVariable Integer id, @RequestParam MumlyEnums.EventStatus status){
         EventRegistration eventRegistration = eventRegistrationRepository.findById(id).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
         eventRegistration.setStatus(status.toString());
@@ -253,7 +254,7 @@ public class EventRegistrationController {
         Pageable pageable = PageRequest.of(dto.getPageNumber() != null ? dto.getPageNumber() : 0, size);
         Page<EventRegistration> eventPage = eventRegistrationRepository.findAll(mumlyEventService.getEventParticipantsSpecification(dto), pageable);
         PaginationResponse<EventRegistration> response = new PaginationResponse<>();
-        response.setContent(eventPage.getContent());
+        response.setContent(updateImagePathInEvents(eventPage.getContent()));
         response.setPage(eventPage.getNumber());
         response.setSize(eventPage.getSize());
         response.setTotalElements((int) eventPage.getTotalElements());
@@ -264,5 +265,16 @@ public class EventRegistrationController {
     @PostMapping("/refund")
     public Response refundTicket(@RequestBody PaymentDto dto) {
         return paymentService.refundTicket(dto);
+    }
+
+    private List<EventRegistration> updateImagePathInEvents(List<EventRegistration> registrationList) {
+        List<EventRegistration> eventRegistrationList = new ArrayList<>();
+        registrationList.forEach(eventRegistration -> {
+            MumlyEvent selectedEvent = eventRegistration.getSelectedEvent();
+            MumlyEvent eventWithImagePath = mumlyEventService.setImagePath(selectedEvent);
+            eventRegistration.setSelectedEvent(eventWithImagePath);
+            eventRegistrationList.add(eventRegistration);
+        });
+        return eventRegistrationList;
     }
 }

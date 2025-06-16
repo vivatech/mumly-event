@@ -11,13 +11,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${allowed.csrf.origins}")
     private String allowedOrigins;
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(allowedOrigins)  // Replace with your Angular app's origin
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
-                .allowedHeaders("Authorization", "Content-Type")
-                .exposedHeaders("Authorization");
-    }
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**")
+//                .allowedOrigins(allowedOrigins)  // Replace with your Angular app's origin
+//                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+//                .allowedHeaders("Authorization", "Content-Type")
+//                .exposedHeaders("Authorization");
+//    }
 
 }

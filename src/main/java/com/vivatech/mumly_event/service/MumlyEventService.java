@@ -86,10 +86,26 @@ public class MumlyEventService {
             mumlyEvent.setEventBrochure(fileName);
         }
         if (eventRequestDto.getEventPictureList() != null) {
-            List<String> picturePaths = eventRequestDto.getEventPictureList().stream()
-                    .map(ele -> UUID.randomUUID() + "." + fileStorageService.getFileExtension(Objects.requireNonNull(ele.getOriginalFilename())))
-                    .toList();
-            mumlyEvent.setEventPictureList(picturePaths);
+            if (mumlyEvent.getId() != null && mumlyEvent.getEventPictureList() != null && !mumlyEvent.getEventPictureList().isEmpty()) {
+                mumlyEvent.getEventPictureList()
+                        .forEach(ele -> fileStorageService
+                                .deleteFile(EventConstants.EVENT_PROFILE_PICTURE + mumlyEvent.getId(), ele));
+                mumlyEvent.setEventPictureList(new ArrayList<>());
+                List<String> picturePaths = eventRequestDto.getEventPictureList().stream()
+                        .map(ele -> UUID.randomUUID() + "." + fileStorageService.getFileExtension(Objects.requireNonNull(ele.getOriginalFilename())))
+                        .toList();
+                mumlyEvent.setEventPictureList(picturePaths);
+            } else if (mumlyEvent.getId() != null && mumlyEvent.getEventPictureList() == null) {
+                List<String> picturePaths = eventRequestDto.getEventPictureList().stream()
+                        .map(ele -> UUID.randomUUID() + "." + fileStorageService.getFileExtension(Objects.requireNonNull(ele.getOriginalFilename())))
+                        .toList();
+                mumlyEvent.setEventPictureList(picturePaths);
+            } else {
+                List<String> picturePaths = eventRequestDto.getEventPictureList().stream()
+                        .map(ele -> UUID.randomUUID() + "." + fileStorageService.getFileExtension(Objects.requireNonNull(ele.getOriginalFilename())))
+                        .toList();
+                mumlyEvent.setEventPictureList(picturePaths);
+            }
         }
         if (eventPicturesUploadFiles != null && mumlyEvent.getEventPicture() == null) {
             String fileName = UUID.randomUUID() + "." +  fileStorageService.getFileExtension(Objects.requireNonNull(eventPicturesUploadFiles.getOriginalFilename()));
@@ -110,7 +126,7 @@ public class MumlyEventService {
             fileStorageService.storeFile(eventBrochureFile, event.getEventPicture(), filePath);
         }
         //TODO: I will think for the update logic later
-        if (mumlyEvent.getId() == null && eventRequestDto.getEventPictureList() != null) {
+        if (eventRequestDto.getEventPictureList() != null) {
             for (String eventPicture : event.getEventPictureList()) {
                 String filePath = EventConstants.EVENT_PROFILE_PICTURE + event.getId();
                 fileStorageService.storeFile(eventBrochureFile, eventPicture, filePath);
@@ -196,7 +212,7 @@ public class MumlyEventService {
         return event;
     }
 
-    private MumlyEvent setImagePath(MumlyEvent mumlyEvent) {
+    public MumlyEvent setImagePath(MumlyEvent mumlyEvent) {
         String eventPicture = mumlyEvent.getEventPicture();
         String eventBrochure = mumlyEvent.getEventBrochure();
         String eventCoverImage = mumlyEvent.getEventCoverImage();
