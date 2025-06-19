@@ -3,6 +3,7 @@ package com.vivatech.mumly_event.repository;
 import com.vivatech.mumly_event.model.EventRegistration;
 import com.vivatech.mumly_event.model.MumlyEvent;
 import com.vivatech.mumly_event.model.Tickets;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,5 +23,9 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     List<EventRegistration> findBySelectedEventIdIn(List<Integer> eventIds);
 
     Integer countByTicketsIn(List<Tickets> tickets);
+
+    EventRegistration findByParticipantPhoneAndSelectedEventId(String phone, Integer eventId);
+
+    EventRegistration findByParticipantPhoneAndStatusIn(@NotNull(message = "Participant phone number is required") String participantPhone, List<String> list);
 
 }

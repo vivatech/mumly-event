@@ -45,7 +45,6 @@ public class MumlyEvent {
     private String organizerName;
 
     @Email
-    @Column(unique = true)
     private String organizerContactEmail;
     @NotNull(message = "Organizer phone number is required")
     private String organizerPhoneNumber;
@@ -65,5 +64,6 @@ public class MumlyEvent {
     private LocalDate updatedAt;
     @ManyToOne
     private MumlyEventOrganizer updatedBy;
+    private String eventStatus;
 
 }

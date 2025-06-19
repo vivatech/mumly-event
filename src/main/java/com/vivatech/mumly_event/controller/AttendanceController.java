@@ -62,4 +62,20 @@ public class AttendanceController {
 
         return new AttendanceSummaryDto(totalPresent, totalAbsent, statusList);
     }
+
+    @GetMapping("/history")
+    public List<AttendanceStatus> getAttendanceHistory(@RequestParam Integer eventId,
+                                                 @RequestParam LocalDate startDate,
+                                                 @RequestParam LocalDate endDate) {
+        List<Object[]> results = attendanceRepository.getAttendanceListByEvent(eventId, startDate, endDate);
+        List<AttendanceStatus> statusList = results.stream()
+                .map(obj -> AttendanceStatus.builder()
+                        .date((LocalDate) obj[0])
+                        .presentCount(((Number) obj[1]).intValue())
+                        .absentCount(((Number) obj[2]).intValue())
+                        .name((String) obj[3])
+                        .email((String) obj[4])
+                        .build()).toList();
+        return statusList;
+    }
 }

@@ -21,4 +21,8 @@ public class MumlyEnums {
         REGISTRATION, EMERGENCY, PAYMENT, FEEDBACK
     }
 
+    public enum ApplicationName {
+        MUMLY_EVENT, MUMLY_TUTOR
+    }
+
 }

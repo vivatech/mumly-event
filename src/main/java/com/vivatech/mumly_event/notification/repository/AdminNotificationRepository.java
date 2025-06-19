@@ -1,6 +1,6 @@
-package com.vivatech.mumly_event.repository;
+package com.vivatech.mumly_event.notification.repository;
 
-import com.vivatech.mumly_event.model.AdminNotification;
+import com.vivatech.mumly_event.notification.model.AdminNotification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +13,6 @@ public interface AdminNotificationRepository extends JpaRepository<AdminNotifica
     List<AdminNotification> findByOrganizerIdAndIsRead(Integer organizerId, Boolean isRead);
 
     List<AdminNotification> findByReceiverMsisdnAndIsRead(String parentMsisdn, boolean isRead);
+
+    List<AdminNotification> findByOrganizerIdAndIsReadAndApplicationName(Integer organizerId, Boolean isRead, String applicationName);
 }

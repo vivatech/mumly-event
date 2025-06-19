@@ -1,5 +1,4 @@
 package com.vivatech.mumly_event.controller;
-import java.time.LocalDateTime;
 import com.vivatech.mumly_event.model.MumlyEventOrganizer;
 import com.vivatech.mumly_event.helper.MumlyEnums.NotificationType;
 
@@ -9,6 +8,8 @@ import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.*;
 import com.vivatech.mumly_event.notification.NotificationService;
+import com.vivatech.mumly_event.notification.model.AdminNotification;
+import com.vivatech.mumly_event.notification.repository.AdminNotificationRepository;
 import com.vivatech.mumly_event.repository.*;
 import org.springframework.web.bind.annotation.*;
 

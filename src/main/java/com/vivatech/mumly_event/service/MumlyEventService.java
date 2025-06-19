@@ -205,6 +205,7 @@ public class MumlyEventService {
         if (event.getId() == null) {
             event.setCreatedAt(LocalDate.now());
             event.setCreatedBy(organizer);
+            event.setEventStatus(MumlyEnums.EventStatus.PENDING.toString());
         } else {
             event.setUpdatedAt(LocalDate.now());
             event.setUpdatedBy(organizer);

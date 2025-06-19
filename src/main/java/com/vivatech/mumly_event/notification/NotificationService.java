@@ -8,6 +8,8 @@ import com.vivatech.mumly_event.helper.MumlyEnums.NotificationType;
 
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.helper.MumlyEnums;
+import com.vivatech.mumly_event.notification.model.AdminNotification;
+import com.vivatech.mumly_event.notification.repository.AdminNotificationRepository;
 import com.vivatech.mumly_event.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,8 +62,9 @@ public class NotificationService {
         adminNotification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
         adminNotification.setRetryCount(0);
         adminNotification.setCreatedAt(LocalDateTime.now());
-        adminNotification.setOrganizer(eventRegistration.getSelectedEvent().getCreatedBy());
-
+        adminNotification.setOrganizerId(eventRegistration.getSelectedEvent().getCreatedBy().getId());
+        adminNotification.setApplicationName(MumlyEnums.ApplicationName.MUMLY_EVENT.toString());
+        adminNotification.setOwnerName(eventRegistration.getSelectedEvent().getOrganizerName());
         adminNotificationRepository.save(adminNotification);
     }
 
@@ -77,7 +80,6 @@ public class NotificationService {
                 + " Payment status: " + mumlyEventPayment.getPaymentStatus());
         adminNotification.setRead(false);
         adminNotification.setType(MumlyEnums.NotificationType.PAYMENT.toString());
-        adminNotification.setOrganizer(eventRegistration.getSelectedEvent().getCreatedBy());
         adminNotification.setSenderMsisdn(eventRegistration.getParticipantPhone());
         adminNotification.setReceiverMsisdn(eventRegistration.getSelectedEvent().getOrganizerPhoneNumber());
         adminNotification.setSenderEmil(eventRegistration.getParticipantEmail());
@@ -86,6 +88,9 @@ public class NotificationService {
         adminNotification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
         adminNotification.setRetryCount(0);
         adminNotification.setCreatedAt(LocalDateTime.now());
+        adminNotification.setOrganizerId(eventRegistration.getSelectedEvent().getCreatedBy().getId());
+        adminNotification.setApplicationName(MumlyEnums.ApplicationName.MUMLY_EVENT.toString());
+        adminNotification.setOwnerName(eventRegistration.getSelectedEvent().getOrganizerName());
         adminNotificationRepository.save(adminNotification);
     }
 
@@ -108,7 +113,9 @@ public class NotificationService {
             notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
             notification.setRetryCount(0);
             notification.setCreatedAt(LocalDateTime.now());
-            notification.setOrganizer(participant.getSelectedEvent().getCreatedBy());
+            notification.setOrganizerId(participant.getSelectedEvent().getCreatedBy().getId());
+            notification.setApplicationName(MumlyEnums.ApplicationName.MUMLY_EVENT.toString());
+            notification.setOwnerName(participant.getSelectedEvent().getOrganizerName());
             adminNotificationRepository.save(notification);
         }
     }
@@ -127,7 +134,9 @@ public class NotificationService {
         notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
         notification.setRetryCount(0);
         notification.setCreatedAt(LocalDateTime.now());
-        notification.setOrganizer(feedback.getEventRegistration().getSelectedEvent().getCreatedBy());
+        notification.setOrganizerId(feedback.getEventRegistration().getSelectedEvent().getCreatedBy().getId());
+        notification.setApplicationName(MumlyEnums.ApplicationName.MUMLY_EVENT.toString());
+        notification.setOwnerName(feedback.getEventRegistration().getSelectedEvent().getOrganizerName());
         adminNotificationRepository.save(notification);
     }
 }

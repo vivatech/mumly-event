@@ -25,4 +25,14 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Integer>
     List<Attendance> findByEventRegistrationId(Integer participantId);
 
     List<Attendance> findByEventRegistrationIn(List<EventRegistration> registrations);
+
+    @Query("SELECT a.date, " +
+            "SUM(CASE WHEN a.present = true THEN 1 ELSE 0 END), " +
+            "SUM(CASE WHEN a.present = false THEN 1 ELSE 0 END), " +
+            "a.eventRegistration.participantName, a.eventRegistration.participantEmail " +
+            "FROM Attendance a " +
+            "WHERE a.eventRegistration.selectedEvent.id = ?1 " +
+            "AND a.date BETWEEN ?2 AND ?3 " +
+            "GROUP BY a.date")
+    List<Object[]> getAttendanceListByEvent(Integer eventId, LocalDate startDate, LocalDate endDate);
 }

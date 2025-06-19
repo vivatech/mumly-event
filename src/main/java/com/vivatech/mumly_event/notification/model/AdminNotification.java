@@ -1,6 +1,5 @@
-package com.vivatech.mumly_event.model;
+package com.vivatech.mumly_event.notification.model;
 
-import com.vivatech.mumly_event.helper.MumlyEnums;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,7 +37,10 @@ public class AdminNotification {
 
     private LocalDateTime createdAt;
 
-
-    @ManyToOne
-    private MumlyEventOrganizer organizer;
+    @Column(name = "organizer_id")
+    private Integer organizerId;
+    @Column(name = "application_name")
+    private String applicationName;
+    @Column(name = "owner_name")
+    private String ownerName;
 }

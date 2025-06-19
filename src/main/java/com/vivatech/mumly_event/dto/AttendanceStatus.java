@@ -18,4 +18,6 @@ public class AttendanceStatus {
     private String month;
     private int presentCount;
     private int absentCount;
+    private String name;
+    private String email;
 }

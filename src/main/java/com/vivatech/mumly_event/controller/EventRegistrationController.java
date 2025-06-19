@@ -10,6 +10,7 @@ import com.vivatech.mumly_event.model.MumlyEventPayment;
 import com.vivatech.mumly_event.model.Tickets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -70,6 +71,13 @@ public class EventRegistrationController {
     @PostMapping
     @Transactional
     public Response createEventRegistration(@RequestBody EventRegistrationRequestDto requestDto) {
+
+        if (validateExistingRegistration(requestDto))
+            return Response.builder()
+                    .status(MumlyEnums.EventStatus.SUCCESS.toString())
+                    .message("Event registration already exists")
+                    .build();
+
         EventRegistrationDto dto = requestDto.getRegistrationDto();
         EventRegistration eventRegistration = new EventRegistration();
         eventRegistration.setParticipantName(dto.getParticipantName());
@@ -92,12 +100,33 @@ public class EventRegistrationController {
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build();
     }
 
+    private boolean validateExistingRegistration(EventRegistrationRequestDto requestDto) {
+        EventRegistration eventRegistration = eventRegistrationRepository.findByParticipantPhoneAndStatusIn(requestDto.getRegistrationDto().getParticipantPhone(),
+                Arrays.asList(MumlyEnums.EventStatus.PENDING.toString(), MumlyEnums.EventStatus.APPROVE.toString()));
+        return eventRegistration != null;
+    }
+
     @PutMapping("/{id}")
     public Response updateParticipantStatus(@PathVariable Integer id, @RequestParam MumlyEnums.EventStatus status){
         EventRegistration eventRegistration = eventRegistrationRepository.findById(id).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
         eventRegistration.setStatus(status.toString());
         eventRegistrationRepository.save(eventRegistration);
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Participant event status " + status + " success.").build();
+    }
+
+    @GetMapping("/get-payment-detail")
+    public MumlyEventPayment getPaymentDetailByRegistrationId(@RequestParam(value = "registrationId", required = false) Integer participantId,
+                                                              @RequestParam(value = "participantPhone", required = false) String participantPhone,
+                                                              @RequestParam(value = "eventId", required = false) Integer eventId) {
+        EventRegistration eventRegistration = null;
+        if (participantId != null) {
+            eventRegistration = eventRegistrationRepository.findById(participantId).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
+        } else if (participantPhone != null && eventId != null) {
+            eventRegistration = eventRegistrationRepository.findByParticipantPhoneAndSelectedEventId(participantPhone, eventId);
+        } else throw new CustomExceptionHandler("Phone and event Id is required");
+        MumlyEventPayment payment = mumlyEventPaymentRepository.findByEventRegistration(eventRegistration);
+        if (payment == null) throw new CustomExceptionHandler("Payment not found");
+        return payment;
     }
 
     @GetMapping("/ticket-detail")
