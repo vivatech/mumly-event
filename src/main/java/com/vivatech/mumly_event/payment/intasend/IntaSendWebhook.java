@@ -2,7 +2,6 @@ package com.vivatech.mumly_event.payment.intasend;
 
 import com.vivatech.mumly_event.helper.MumlyUtils;
 import com.vivatech.mumly_event.payment.PaymentService;
-import com.vivatech.mumly_event.payment.mpesa.MExpressCallbackRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -10,6 +10,7 @@ import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.MumlyEventPayment;
 import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.payment.intasend.RefundTicketDto;
+import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class PaymentService {
+    @Autowired
+    private EventRegistrationRepository eventRegistrationRepository;
 
     @Autowired
     private PaymentGatewayProcessor paymentGateway;
@@ -94,7 +97,12 @@ public class PaymentService {
             refundPayment.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND_FAILED.toString());
             refundPayment.setReason(response.getMessage());
         }
-        paymentRepository.save(refundPayment);
+        MumlyEventPayment savedPayment = paymentRepository.save(refundPayment);
+        if (savedPayment.getPaymentStatus().equalsIgnoreCase(MumlyEnums.PaymentStatus.REFUND.toString())) {
+            EventRegistration eventRegistration = eventRegistrationRepository.findById(savedPayment.getEventRegistration().getId()).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
+            eventRegistration.setStatus(MumlyEnums.EventStatus.REFUND.toString());
+            eventRegistrationRepository.save(eventRegistration);
+        }
         return response;
     }
 }

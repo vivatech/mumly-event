@@ -13,6 +13,7 @@ import com.vivatech.mumly_event.notification.repository.AdminNotificationReposit
 import com.vivatech.mumly_event.repository.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -48,12 +49,18 @@ public class NotificationController {
         MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
         MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
         List<AdminNotification> adminNotification = adminNotificationRepository.findByOrganizerIdAndIsRead(organizer.getId(), isRead);
-        return adminNotification.stream().filter(ele -> !ele.getType().equals(NotificationType.EMERGENCY)).toList();
+        return adminNotification.stream().filter(ele -> Arrays.asList(NotificationType.PAYMENT.toString(), NotificationType.REGISTRATION.toString()).contains(ele.getType())).toList();
     }
 
     @GetMapping("/parent-notification")
     public List<AdminNotification> getParentNotification(@RequestParam String parentMsisdn) {
         return adminNotificationRepository.findByReceiverMsisdnAndIsRead(parentMsisdn, false);
+    }
+
+    @GetMapping("/parent-notification-unread-count")
+    public Integer getParentNotificationUnreadCount(@RequestParam String parentMsisdn) {
+        List<AdminNotification> parentNotification = adminNotificationRepository.findByReceiverMsisdnAndIsRead(parentMsisdn, false);
+        return parentNotification.size();
     }
 
     @PostMapping("/emergency-notification")

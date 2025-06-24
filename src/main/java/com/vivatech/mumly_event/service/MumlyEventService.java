@@ -44,6 +44,7 @@ public class MumlyEventService {
     private final PaymentGatewayProcessor paymentGateway;
     private final NotificationService notificationService;
     private final PaymentService paymentService;
+    private final MumlyEventPayoutRepository mumlyEventPayoutRepository;
 
     public MumlyEventService(EventCategoryRepository eventCategoryRepository, FileStorageService fileStorageService,
                              MumlyEventRepository mumlyEventRepository,
@@ -52,7 +53,8 @@ public class MumlyEventService {
                              MumlyEventOrganizerRepository mumlyEventOrganizerRepository,
                              EventRegistrationRepository eventRegistrationRepository,
                              MumlyEventPaymentRepository mumlyEventPaymentRepository,
-                             PaymentGatewayProcessor paymentGateway, NotificationService notificationService, PaymentService paymentService) {
+                             PaymentGatewayProcessor paymentGateway, NotificationService notificationService, PaymentService paymentService,
+                             MumlyEventPayoutRepository mumlyEventPayoutRepository) {
         this.eventCategoryRepository = eventCategoryRepository;
         this.fileStorageService = fileStorageService;
         this.mumlyEventRepository = mumlyEventRepository;
@@ -64,6 +66,7 @@ public class MumlyEventService {
         this.paymentGateway = paymentGateway;
         this.notificationService = notificationService;
         this.paymentService = paymentService;
+        this.mumlyEventPayoutRepository = mumlyEventPayoutRepository;
     }
 
     @Transactional
@@ -274,6 +277,7 @@ public class MumlyEventService {
         dto.setEventCategory(mumlyEvent.getEventCategory());
         dto.setDescription(mumlyEvent.getEventDescription());
         dto.setEventDate(mumlyEvent.getStartDate());
+        dto.setEventEndDate(mumlyEvent.getEndDate());
         dto.setEventTime(mumlyEvent.getStartTime());
         dto.setEventType(mumlyEvent.getEventType());
         dto.setVenueName(mumlyEvent.getVenueName());
@@ -372,5 +376,20 @@ public class MumlyEventService {
         notificationService.sendAdminNotification(eventId, MumlyEnums.NotificationType.EMERGENCY, reason);
 
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event cancelled and payment refund success.").build();
+    }
+
+    @Transactional
+    public Response savePayoutDetail(PayoutRequestDto dto) {
+        MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventId(dto.getEventId());
+        if (mumlyEventPayout == null) throw new CustomExceptionHandler("Payout not found");
+        mumlyEventPayout.setCommission(dto.getCommission());
+        mumlyEventPayout.setNetAmount(dto.getNetAmount());
+        mumlyEventPayout.setPaymentStatus(dto.getPaymentStatus().toString());
+        mumlyEventPayout.setTransactionId(dto.getTransactionId());
+        mumlyEventPayout.setReferenceNo(dto.getReferenceNo());
+        mumlyEventPayout.setPaymentMode(dto.getPaymentMode().toString());
+        mumlyEventPayout.setReason(dto.getReason());
+        mumlyEventPayoutRepository.save(mumlyEventPayout);
+        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Payout updated successfully.").build();
     }
 }

@@ -18,13 +18,18 @@ public class EventReportController {
     private DashboardService dashboardService;
 
     @GetMapping
-    public EventReportResponse displayFeedBackPoints(@RequestParam String username, @RequestParam(required = false, defaultValue = "#{T(java.time.Year).now().getValue()}" ) Integer year) {
-        return EventReportResponse.builder()
+    public EventReportResponse displayFeedBackPoints(@RequestParam String username,
+                                                     @RequestParam(required = false,
+                                                             defaultValue = "#{T(java.time.Year).now().getValue()}") Integer year) {
+        EventReportResponse reportResponse = EventReportResponse.builder()
                 .feedBackSummary(dashboardService.getAverageFeedbackParent(username))
                 .totalParticipants(dashboardService.getNumberOfParticipantOfEventOrganiser(username))
                 .participantNoByMonth(dashboardService.getParticipantCountByMonth(username, year))
                 .attendanceByMonth(dashboardService.getAttendanceByMonth(username, year))
+                .mumlyEventList(dashboardService.getTop10EventByDate(username))
                 .build();
+        reportResponse.setAttendanceRate(dashboardService.attendanceRate(reportResponse.getAttendanceByMonth()));
+        return reportResponse;
     }
 
 

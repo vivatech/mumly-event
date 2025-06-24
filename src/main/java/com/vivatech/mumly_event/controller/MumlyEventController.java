@@ -71,4 +71,17 @@ public class MumlyEventController {
         return response;
     }
 
+    @Operation(summary = "Send payout to the event organiser for an event",
+            requestBody = @RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(implementation = PayoutRequestDto.class) // Link to your DTO schema
+                    )
+            )
+    )
+    @PostMapping("/send-payout-of-event")
+    public Response sendPayoutOfEvent(@ModelAttribute PayoutRequestDto dto) {
+        return service.savePayoutDetail(dto);
+    }
+
 }

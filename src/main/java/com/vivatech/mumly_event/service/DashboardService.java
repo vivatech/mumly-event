@@ -1,13 +1,19 @@
 package com.vivatech.mumly_event.service;
 
 import com.vivatech.mumly_event.dto.AttendanceStatus;
+import com.vivatech.mumly_event.dto.EventDashboardHistory;
+import com.vivatech.mumly_event.dto.MumlyEventResponseDto;
+import com.vivatech.mumly_event.dto.PayoutMetricsDto;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
+import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.*;
 import com.vivatech.mumly_event.repository.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.format.TextStyle;
@@ -16,6 +22,10 @@ import java.util.*;
 @Slf4j
 @Service
 public class DashboardService {
+    @Autowired
+    private MumlyEventPaymentRepository mumlyEventPaymentRepository;
+    @Autowired
+    private MumlyEventPayoutRepository mumlyEventPayoutRepository;
     @Autowired
     private AttendanceRepository attendanceRepository;
     @Autowired
@@ -29,6 +39,25 @@ public class DashboardService {
 
     @Autowired
     private ParentFeedbackRepository parentFeedbackRepository;
+
+    public List<MumlyEventResponseDto> getTop10EventByDate(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findTop10ByCreatedByIdOrderByCreatedAtDesc(organizer.getId());
+
+        List<MumlyEventResponseDto> response = new ArrayList<>();
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventId(event.getId());
+            if (mumlyEventPayout == null) continue;
+            MumlyEventResponseDto responseDto = new MumlyEventResponseDto();
+            responseDto.setEventName(mumlyEventPayout.getEvent().getEventName());
+            responseDto.setEventCategory(mumlyEventPayout.getEvent().getEventCategory());
+            responseDto.setEventDate(mumlyEventPayout.getEvent().getStartDate());
+            responseDto.setAmount(mumlyEventPayout.getAmount());
+            response.add(responseDto);
+        }
+        return response;
+    }
 
     public Double getAverageFeedbackParent(String username) {
         MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
@@ -123,6 +152,14 @@ public class DashboardService {
         return attendanceMap;
     }
 
+    public Double attendanceRate(Map<String, AttendanceStatus> attendanceMap) {
+        // Calculate the overall attendance rate
+        double totalPresent = attendanceMap.values().stream().mapToDouble(AttendanceStatus::getPresentCount).sum();
+        double totalAbsent = attendanceMap.values().stream().mapToDouble(AttendanceStatus::getAbsentCount).sum();
+        double totalAttendances = totalPresent + totalAbsent;
+        return totalAttendances <= 0 ? 0.0 : totalPresent / totalAttendances * 100;
+    }
+
     private Map<String, Integer> initializeEmptyMonthMap() {
         Map<String, Integer> emptyMap = new LinkedHashMap<>();
         emptyMap.put("Jan", 0);
@@ -149,6 +186,132 @@ public class DashboardService {
         return map;
     }
 
+    public Double calculateGrossRevenue(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedById(organizer.getId());
+        double grossAmount = 0;
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventIdAndPaymentStatusIn(event.getId(), Collections.singletonList(MumlyEnums.PaymentStatus.SUCCESS.toString()));
+            if (mumlyEventPayout == null) continue;
+            grossAmount += mumlyEventPayout.getAmount();
+        }
+        return grossAmount;
+    }
+
+    public Double calculateNetRevenue(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedById(organizer.getId());
+        double netAmount = 0;
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventIdAndPaymentStatusIn(event.getId(), Collections.singletonList(MumlyEnums.PaymentStatus.SUCCESS.toString()));
+            if (mumlyEventPayout == null) continue;
+            netAmount += mumlyEventPayout.getNetAmount();
+        }
+        return netAmount;
+    }
+
+    public List<Triple<String, Double, Double>> revenueByEventCategory(String username, Double netRevenue) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedById(organizer.getId());
+        Map<String, Double> revenueByEventCategory = new HashMap<>();
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventIdAndPaymentStatusIn(event.getId(), Collections.singletonList(MumlyEnums.PaymentStatus.SUCCESS.toString()));
+            if (mumlyEventPayout == null) continue;
+            double netAmount = mumlyEventPayout.getNetAmount();
+            revenueByEventCategory.put(event.getEventCategory().getName(), revenueByEventCategory.getOrDefault(event.getEventCategory().getName(), 0.0) + netAmount);
+        }
+        List<Triple<String, Double, Double>> data = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : revenueByEventCategory.entrySet()) {
+            data.add(Triple.of(entry.getKey(), entry.getValue(), (entry.getValue() / netRevenue) * 100));
+        }
+        return data;
+
+    }
+
+    public Map<String, Integer> revenueByMonth(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        int targetYear = Year.now().getValue();
+        List<MumlyEvent> mumlyEvents = mumlyEventRepository.findByCreatedById(organizer.getId());
+        List<MumlyEvent> eventList = mumlyEvents.stream().filter(ele -> ele.getStartDate().getYear() == targetYear).toList();
+        Map<String, Integer> revenueByMonth = initializeEmptyMonthMap();
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventIdAndPaymentStatusIn(event.getId(), Collections.singletonList(MumlyEnums.PaymentStatus.SUCCESS.toString()));
+            if (mumlyEventPayout == null) continue;
+            double netAmount = mumlyEventPayout.getNetAmount();
+            String month = event.getStartDate().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH); // "Jan", "Feb", etc.
+            revenueByMonth.put(month, revenueByMonth.getOrDefault(month, 0) + (int) netAmount);
+        }
+        return revenueByMonth;
+    }
+
+    public PayoutMetricsDto calculatePayoutMetrics(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedById(organizer.getId());
+        PayoutMetricsDto payoutMetricsDto = new PayoutMetricsDto();
+
+        int totalPayout = 0;
+        int pendingPayout = 0;
+        double commission = 0.0;
+
+        List<MumlyEventPayout> payoutList = new ArrayList<>();
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventId(event.getId());
+            if (mumlyEventPayout == null) continue;
+            if (mumlyEventPayout.getPaymentStatus().equals(MumlyEnums.PaymentStatus.PENDING.toString())) pendingPayout += 1;
+            if (mumlyEventPayout.getPaymentStatus().equals(MumlyEnums.PaymentStatus.SUCCESS.toString())) totalPayout += 1;
+            commission += mumlyEventPayout.getCommission();
+            payoutList.add(mumlyEventPayout);
+        }
+        payoutMetricsDto.setTotalPayout(totalPayout);
+        payoutMetricsDto.setPendingPayout(pendingPayout);
+        payoutMetricsDto.setCommission(commission);
+        LocalDate nextPaymentDate = payoutList.stream()
+                .filter(ele -> ele.getPaymentStatus().equalsIgnoreCase(MumlyEnums.PaymentStatus.PENDING.toString()))
+                .sorted(Comparator.comparing(ele -> ele.getEvent().getEndDate()))
+                .findFirst()
+                .map(ele -> ele.getEvent().getEndDate()).orElse(null);
+        payoutMetricsDto.setNextPayoutDate(nextPaymentDate);
+        return payoutMetricsDto;
+    }
+
+    public EventDashboardHistory eventDashboardHistory(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedById(organizer.getId());
+        List<MumlyEventPayout> payoutList = mumlyEventPayoutRepository.findByEventIn(eventList);
+
+        int hostedEvent = 0;
+        int publishedEvent = 0;
+        EventDashboardHistory eventDashboardHistory = new EventDashboardHistory();
+        for (MumlyEventPayout payout : payoutList) {
+            if (payout.getPaymentStatus().equals(MumlyEnums.PaymentStatus.SUCCESS.toString())) hostedEvent += 1;
+            if (payout.getPaymentStatus().equals(MumlyEnums.PaymentStatus.PENDING.toString())) publishedEvent += 1;
+        }
+        int draftEvent = (int) eventList.stream()
+                .filter(ele -> ele.getEventStatus().equalsIgnoreCase(MumlyEnums.EventStatus.PENDING.toString()))
+                .count();
+        eventDashboardHistory.setHostedEvent(hostedEvent);
+        eventDashboardHistory.setPublishedEvent(publishedEvent);
+        eventDashboardHistory.setDraftEvent(draftEvent);
+        return eventDashboardHistory;
+    }
+
+    public Integer refundIssued(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedById(organizer.getId());
+        int refundCount = 0;
+        for (MumlyEvent event : eventList) {
+            List<MumlyEventPayment> paymentList = mumlyEventPaymentRepository.findByEventRegistrationSelectedEventIdAndPaymentStatus(event.getId(), MumlyEnums.PaymentStatus.REFUND.toString());
+            refundCount += paymentList.size();
+        }
+        return refundCount;
+    }
 
 
 }

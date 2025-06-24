@@ -100,7 +100,7 @@
 
 	<profiles>
 		<profile>
-			<id>executable</id>
+			<id>server</id>
 			<build>
 				<plugins>
 					<plugin>

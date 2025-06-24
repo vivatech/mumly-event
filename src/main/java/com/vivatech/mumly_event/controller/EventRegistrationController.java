@@ -273,7 +273,7 @@ public class EventRegistrationController {
         MumlyEventPayment payment = mumlyEventPaymentRepository.findByReferenceNo(referenceNo);
         if (payment == null) throw new CustomExceptionHandler("Payment not found");
         String successTransactionId = MumlyUtils.generateRandomString();
-        paymentService.processPaymentCallBack(payment.getReferenceNo(), successTransactionId, MumlyEnums.PaymentStatus.SUCCESS.toString(), null);
+        paymentService.processPaymentCallBack(payment.getReferenceNo(), successTransactionId, MumlyEnums.PaymentStatus.COMPLETE.toString(), null);
         return Response.builder().status(MumlyEnums.PaymentStatus.SUCCESS.toString()).message("Payment received successfully").build();
     }
 

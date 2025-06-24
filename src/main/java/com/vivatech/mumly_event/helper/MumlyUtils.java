@@ -2,8 +2,12 @@ package com.vivatech.mumly_event.helper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vivatech.mumly_event.dto.PaginationResponse;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -301,5 +305,25 @@ public class MumlyUtils {
 
     public static String generateRandomString() {
         return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+    }
+
+    public static <T> Page<T> convertListToPage(List<T> dataList, int pageNumber, int pageSize) {
+
+        int start = pageNumber * pageSize;
+        int end = Math.min(start + pageSize, dataList.size());
+
+        List<T> pageContent = dataList.subList(start, end);
+
+        return new PageImpl<>(pageContent, PageRequest.of(pageNumber, pageSize), dataList.size());
+    }
+
+    public static <T> PaginationResponse<T> convertPageToPaginationResponse(Page<T> page, List<T> dtoList) {
+        PaginationResponse<T> response = new PaginationResponse<>();
+        response.setContent(dtoList);
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements((int) page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        return response;
     }
 }
