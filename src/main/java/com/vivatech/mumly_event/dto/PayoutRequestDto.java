@@ -1,5 +1,6 @@
 package com.vivatech.mumly_event.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PayoutRequestDto {
     @NotNull(message = "Event ID is required")
     @Schema(example = "1")

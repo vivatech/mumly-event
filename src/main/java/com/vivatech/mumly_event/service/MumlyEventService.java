@@ -392,4 +392,20 @@ public class MumlyEventService {
         mumlyEventPayoutRepository.save(mumlyEventPayout);
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Payout updated successfully.").build();
     }
+
+    public List<PayoutRequestDto> getPendingPayouts() {
+
+        List<MumlyEventPayout> payouts = mumlyEventPayoutRepository.findByPaymentStatus(MumlyEnums.PaymentStatus.PENDING.toString());
+        List<PayoutRequestDto> dtoList = new ArrayList<>();
+        for (MumlyEventPayout payout : payouts) {
+            PayoutRequestDto dto = new PayoutRequestDto();
+            dto.setEventId(payout.getEvent().getId());
+            dto.setAmount(payout.getAmount());
+            dto.setCommission(null);
+            dto.setNetAmount(null);
+            dto.setPaymentStatus(MumlyEnums.PaymentStatus.valueOf(payout.getPaymentStatus()));
+            dtoList.add(dto);
+        }
+        return dtoList;
+    }
 }

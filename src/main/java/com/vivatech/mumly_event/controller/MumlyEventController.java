@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import java.io.IOException;
+import java.util.List;
 
 @CrossOrigin(allowedHeaders = "*", origins = "*")
 @RestController
@@ -82,6 +83,11 @@ public class MumlyEventController {
     @PostMapping("/send-payout-of-event")
     public Response sendPayoutOfEvent(@ModelAttribute PayoutRequestDto dto) {
         return service.savePayoutDetail(dto);
+    }
+
+    @GetMapping("/get-pending-payouts")
+    public List<PayoutRequestDto> getPendingPayouts() {
+        return service.getPendingPayouts();
     }
 
 }

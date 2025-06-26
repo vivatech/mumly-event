@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -34,14 +35,10 @@ public class MumlyEventScheduler {
         log.info("Executing sumAllEventPayout at {}", LocalDateTime.now());
         List<MumlyEvent> mumlyEventList = mumlyEventRepository.findByEndDateGreaterThanEqual(LocalDate.now());
         for (MumlyEvent event : mumlyEventList) {
-            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository
-                    .findByEventIdAndPaymentStatusIn(
-                            event.getId(),
-                            Arrays.asList(
-                                    MumlyEnums.PaymentStatus.PENDING.toString(),
-                                    MumlyEnums.PaymentStatus.FAILED.toString()
-                            )
-                    );
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventId(event.getId());
+            if (mumlyEventPayout != null
+                    && Stream.of(MumlyEnums.PaymentStatus.SUCCESS, MumlyEnums.PaymentStatus.COMPLETE)
+                    .anyMatch(ele -> ele.toString().equals(mumlyEventPayout.getPaymentStatus()))) continue;
             if (mumlyEventPayout != null) {
                 List<MumlyEventPayment> paymentList = mumlyEventPaymentRepository.findByEventRegistrationSelectedEventIdAndPaymentStatus(mumlyEventPayout.getEvent().getId(), MumlyEnums.PaymentStatus.COMPLETE.toString());
                 if (paymentList.isEmpty()) continue;

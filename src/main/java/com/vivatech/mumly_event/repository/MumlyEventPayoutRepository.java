@@ -14,4 +14,6 @@ public interface MumlyEventPayoutRepository extends JpaRepository<MumlyEventPayo
     MumlyEventPayout findByEventIdAndPaymentStatusIn(Integer eventId, List<String> paymentStatus);
 
     List<MumlyEventPayout> findByEventIn(List<MumlyEvent> eventList);
+
+    List<MumlyEventPayout> findByPaymentStatus(String paymentStatus);
 }
