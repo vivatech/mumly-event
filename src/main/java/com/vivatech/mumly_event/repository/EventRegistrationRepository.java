@@ -26,6 +26,6 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     EventRegistration findByParticipantPhoneAndSelectedEventId(String phone, Integer eventId);
 
-    EventRegistration findByParticipantPhoneAndStatusIn(@NotNull(message = "Participant phone number is required") String participantPhone, List<String> list);
+    EventRegistration findByParticipantPhoneAndStatusInAndSelectedEventId(@NotNull(message = "Participant phone number is required") String participantPhone, List<String> list, Integer eventId);
 
 }

@@ -75,7 +75,7 @@ public class EventRegistrationController {
         if (validateExistingRegistration(requestDto))
             return Response.builder()
                     .status(MumlyEnums.EventStatus.FAILED.toString())
-                    .message("Event registration already exists")
+                    .message("Event registration already exists for this event.")
                     .build();
 
         EventRegistrationDto dto = requestDto.getRegistrationDto();
@@ -101,8 +101,9 @@ public class EventRegistrationController {
     }
 
     private boolean validateExistingRegistration(EventRegistrationRequestDto requestDto) {
-        EventRegistration eventRegistration = eventRegistrationRepository.findByParticipantPhoneAndStatusIn(requestDto.getRegistrationDto().getParticipantPhone(),
-                Arrays.asList(MumlyEnums.EventStatus.PENDING.toString(), MumlyEnums.EventStatus.APPROVE.toString()));
+        EventRegistration eventRegistration = eventRegistrationRepository.findByParticipantPhoneAndStatusInAndSelectedEventId(requestDto.getRegistrationDto().getParticipantPhone(),
+                Arrays.asList(MumlyEnums.EventStatus.PENDING.toString(), MumlyEnums.EventStatus.APPROVE.toString()),
+                requestDto.getRegistrationDto().getEventId());
         return eventRegistration != null;
     }
 
