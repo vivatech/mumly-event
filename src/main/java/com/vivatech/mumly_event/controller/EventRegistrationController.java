@@ -74,7 +74,7 @@ public class EventRegistrationController {
 
         if (validateExistingRegistration(requestDto))
             return Response.builder()
-                    .status(MumlyEnums.EventStatus.SUCCESS.toString())
+                    .status(MumlyEnums.EventStatus.FAILED.toString())
                     .message("Event registration already exists")
                     .build();
 
