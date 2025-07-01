@@ -15,4 +15,5 @@ public class EventRegistrationFilter extends EventRegistrationDto {
     private String participantPhone;
     private Integer pageNumber;
     private Integer size;
+    private String searchTerm;
 }

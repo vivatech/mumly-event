@@ -8,6 +8,7 @@ import com.vivatech.mumly_event.model.Attendance;
 import com.vivatech.mumly_event.model.EventRegistration;
 import com.vivatech.mumly_event.repository.AttendanceRepository;
 import com.vivatech.mumly_event.repository.EventRegistrationRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,8 +66,9 @@ public class AttendanceController {
 
     @GetMapping("/history")
     public List<AttendanceStatus> getAttendanceHistory(@RequestParam Integer eventId,
-                                                 @RequestParam LocalDate startDate,
-                                                 @RequestParam LocalDate endDate) {
+                                                       @RequestParam LocalDate startDate,
+                                                       @RequestParam LocalDate endDate,
+                                                       @RequestParam(required = false) String participantName) {
         List<Object[]> results = attendanceRepository.getAttendanceListByEvent(eventId, startDate, endDate);
         List<AttendanceStatus> statusList = results.stream()
                 .map(obj -> AttendanceStatus.builder()
@@ -76,6 +78,12 @@ public class AttendanceController {
                         .name((String) obj[3])
                         .email((String) obj[4])
                         .build()).toList();
+        if (!StringUtils.isEmpty(participantName)) {
+            String lowerCaseName = participantName.toLowerCase();
+            statusList = statusList.stream()
+                    .filter(ele -> ele.getName().toLowerCase().contains(lowerCaseName))
+                    .toList();
+        }
         return statusList;
     }
 }

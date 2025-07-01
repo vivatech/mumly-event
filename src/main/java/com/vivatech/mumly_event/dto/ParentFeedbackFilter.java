@@ -15,4 +15,5 @@ public class ParentFeedbackFilter extends ParentFeedbackRequest {
     private Integer size;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String eventOrganizerUserName;
 }

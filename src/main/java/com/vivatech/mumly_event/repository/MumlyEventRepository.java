@@ -1,6 +1,7 @@
 package com.vivatech.mumly_event.repository;
 
 import com.vivatech.mumly_event.model.MumlyEvent;
+import com.vivatech.mumly_event.model.MumlyEventOrganizer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,4 +18,6 @@ public interface MumlyEventRepository extends JpaRepository<MumlyEvent, Integer>
     List<MumlyEvent> findByCreatedById(Integer id);
     List<MumlyEvent> findTop10ByCreatedByIdOrderByCreatedAtDesc(Integer id);
     List<MumlyEvent> findByEndDateGreaterThanEqual(LocalDate startDate);
+
+    List<MumlyEvent> findByCreatedByAndStartDateGreaterThanEqual(MumlyEventOrganizer organizer, LocalDate oneMonthBefore);
 }

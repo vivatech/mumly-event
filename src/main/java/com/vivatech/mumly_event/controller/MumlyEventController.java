@@ -59,7 +59,7 @@ public class MumlyEventController {
     }
 
     @PostMapping("/filter")
-    public PaginationResponse<MumlyEventResponseDto> filterEvent(@RequestBody MumlyEventFilterRequest dto) {
+    public PaginationResponse<MumlyEventResponseDto> filterEvent(@org.springframework.web.bind.annotation.RequestBody MumlyEventFilterRequest dto) {
         int size = dto.getSize() != null ? dto.getSize() : EventConstants.PAGE_SIZE;
         Pageable pageable = PageRequest.of(dto.getPageNumber() != null ? dto.getPageNumber() : 0, size);
         Page<MumlyEvent> eventPage = service.filterEvent(dto, pageable);

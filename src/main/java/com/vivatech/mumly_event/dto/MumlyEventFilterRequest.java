@@ -16,4 +16,5 @@ public class MumlyEventFilterRequest {
     private Integer pageNumber;
     private Integer size;
     private String username;
+    private String eventName;
 }

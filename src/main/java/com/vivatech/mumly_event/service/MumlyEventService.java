@@ -323,6 +323,10 @@ public class MumlyEventService {
                 }
             }
 
+            if (!StringUtils.isEmpty(dto.getEventName())) {
+                predicates.add(criteriaBuilder.like(root.get("eventName"), "%" + dto.getEventName() + "%"));
+            }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -349,6 +353,11 @@ public class MumlyEventService {
             }
             if (!StringUtils.isEmpty(dto.getParticipantPhone())) {
                 predicates.add(criteriaBuilder.equal(root.get("participantPhone"), dto.getParticipantPhone()));
+            }
+            if(!StringUtils.isEmpty(dto.getSearchTerm())) {
+                Predicate participantNamePredicate = criteriaBuilder.like(root.get("participantName"), "%" + dto.getSearchTerm() + "%");
+                Predicate eventNamePredicate = criteriaBuilder.like(root.get("selectedEvent").get("eventName"), "%" + dto.getSearchTerm() + "%");
+                predicates.add(criteriaBuilder.or(participantNamePredicate, eventNamePredicate));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

@@ -5,6 +5,7 @@ import com.vivatech.mumly_event.dto.EventDashboardHistory;
 import com.vivatech.mumly_event.dto.MumlyEventResponseDto;
 import com.vivatech.mumly_event.dto.PayoutMetricsDto;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
+import com.vivatech.mumly_event.helper.EventConstants;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.model.*;
 import com.vivatech.mumly_event.repository.*;
@@ -43,17 +44,18 @@ public class DashboardService {
     public List<MumlyEventResponseDto> getTop10EventByDate(String username) {
         MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
         MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
-        List<MumlyEvent> eventList = mumlyEventRepository.findTop10ByCreatedByIdOrderByCreatedAtDesc(organizer.getId());
+        LocalDate oneMonthBefore = LocalDate.now().plusMonths(1);
+        List<MumlyEvent> eventList = mumlyEventRepository.findByCreatedByAndStartDateGreaterThanEqual(organizer, oneMonthBefore);
 
         List<MumlyEventResponseDto> response = new ArrayList<>();
         for (MumlyEvent event : eventList) {
-            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventId(event.getId());
-            if (mumlyEventPayout == null) continue;
             MumlyEventResponseDto responseDto = new MumlyEventResponseDto();
-            responseDto.setEventName(mumlyEventPayout.getEvent().getEventName());
-            responseDto.setEventCategory(mumlyEventPayout.getEvent().getEventCategory());
-            responseDto.setEventDate(mumlyEventPayout.getEvent().getStartDate());
-            responseDto.setAmount(mumlyEventPayout.getAmount());
+            responseDto.setEventName(event.getEventName());
+            responseDto.setEventCategory(event.getEventCategory());
+            responseDto.setEventDate(event.getStartDate());
+            responseDto.setAmount(event.getTickets().stream().map(Tickets::getTicketPrice).findFirst().orElse(0.0));
+            responseDto.setStatus(event.getEventStatus());
+            responseDto.setEventCoverImage(EventConstants.EVENT_COVER_PICTURE + event.getId() + "/" + event.getEventCoverImage());
             response.add(responseDto);
         }
         return response;

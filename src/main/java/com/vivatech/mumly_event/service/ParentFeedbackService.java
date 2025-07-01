@@ -4,12 +4,14 @@ import com.vivatech.mumly_event.dto.ParentFeedbackFilter;
 import com.vivatech.mumly_event.dto.ParentFeedbackRequest;
 import com.vivatech.mumly_event.model.*;
 import com.vivatech.mumly_event.repository.MumlyAdminsRepository;
+import com.vivatech.mumly_event.repository.MumlyEventOrganizerRepository;
 import com.vivatech.mumly_event.repository.MumlyEventRepository;
 import com.vivatech.mumly_event.repository.ParentFeedbackRepository;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +30,7 @@ public class ParentFeedbackService {
     private final ParentFeedbackRepository parentFeedbackRepository;
     private final MumlyEventRepository mumlyEventRepository;
     private final MumlyAdminsRepository mumlyAdminsRepository;
+    private final MumlyEventOrganizerRepository mumlyEventOrganizerRepository;
 
 
     @Transactional
@@ -109,6 +112,15 @@ public class ParentFeedbackService {
             if (!ObjectUtils.isEmpty(dto.getUsername())) {
                 MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(dto.getUsername());
                 if (mumlyAdmin != null) predicates.add(criteriaBuilder.equal(root.get("submittedById"), mumlyAdmin.getId()));
+            }
+            if (!StringUtils.isEmpty(dto.getEventOrganizerUserName())) {
+                MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(dto.getEventOrganizerUserName());
+                MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElse(null);
+                if (organizer != null) {
+                    List<Integer> eventList = mumlyEventRepository.findByCreatedById(organizer.getId())
+                                    .stream().map(MumlyEvent::getId).toList();
+                    predicates.add(root.get("event").get("id").in(eventList));
+                }
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

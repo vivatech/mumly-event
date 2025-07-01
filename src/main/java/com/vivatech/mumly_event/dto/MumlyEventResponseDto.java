@@ -35,4 +35,5 @@ public class MumlyEventResponseDto {
     private String eventOrganiserPhone;
     private String eventCreatedBy;
     private Double amount;
+    private String status;
 }
