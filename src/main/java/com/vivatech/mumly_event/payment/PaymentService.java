@@ -79,6 +79,7 @@ public class PaymentService {
     }
 
     public Response refundTicket(PaymentDto dto) {
+        //Transaction ID means the Invoice ID which you got from the Aggregator
         MumlyEventPayment payment = paymentRepository.findByTransactionId(dto.getTransactionId());
         dto.setPaymentMode(MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()));
         dto.setMsisdn(payment.getMsisdn());
@@ -93,14 +94,18 @@ public class PaymentService {
             refundPayment.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND.toString());
             refundPayment.setUpdatedAt(LocalDateTime.now());
             refundPayment.setReason(dto.getReason());
+            payment.setAmount(0.0);
+            payment.setReason("Amount refunded. The chargeback ID is: " + refundPayment.getTransactionId());
         } else {
             refundPayment.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND_FAILED.toString());
             refundPayment.setReason(response.getMessage());
         }
         MumlyEventPayment savedPayment = paymentRepository.save(refundPayment);
+        paymentRepository.save(payment);
         if (savedPayment.getPaymentStatus().equalsIgnoreCase(MumlyEnums.PaymentStatus.REFUND.toString())) {
             EventRegistration eventRegistration = eventRegistrationRepository.findById(savedPayment.getEventRegistration().getId()).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
             eventRegistration.setStatus(MumlyEnums.EventStatus.REFUND.toString());
+            eventRegistration.setReason(savedPayment.getReason());
             eventRegistrationRepository.save(eventRegistration);
         }
         return response;

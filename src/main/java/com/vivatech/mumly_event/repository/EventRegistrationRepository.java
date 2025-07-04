@@ -20,6 +20,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     Integer countBySelectedEventIn(List<MumlyEvent> eventList);
 
+    Integer countBySelectedEventAndStatusNotIn(MumlyEvent event, List<String> list);
+
     List<EventRegistration> findBySelectedEventIdIn(List<Integer> eventIds);
 
     Integer countByTicketsIn(List<Tickets> tickets);

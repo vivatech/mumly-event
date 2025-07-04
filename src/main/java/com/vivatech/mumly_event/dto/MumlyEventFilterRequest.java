@@ -17,4 +17,5 @@ public class MumlyEventFilterRequest {
     private Integer size;
     private String username;
     private String eventName;
+    private Boolean displayCompletedEvent = false;
 }

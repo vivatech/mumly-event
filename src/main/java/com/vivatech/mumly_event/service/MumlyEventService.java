@@ -25,10 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class MumlyEventService {
@@ -327,6 +324,11 @@ public class MumlyEventService {
                 predicates.add(criteriaBuilder.like(root.get("eventName"), "%" + dto.getEventName() + "%"));
             }
 
+            if (!dto.getDisplayCompletedEvent()) {
+                LocalDate today = LocalDate.now();
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), today));
+            }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -358,6 +360,10 @@ public class MumlyEventService {
                 Predicate participantNamePredicate = criteriaBuilder.like(root.get("participantName"), "%" + dto.getSearchTerm() + "%");
                 Predicate eventNamePredicate = criteriaBuilder.like(root.get("selectedEvent").get("eventName"), "%" + dto.getSearchTerm() + "%");
                 predicates.add(criteriaBuilder.or(participantNamePredicate, eventNamePredicate));
+            }
+            if (!dto.getDisplayCompletedEvent()){
+                LocalDate today = LocalDate.now();
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("selectedEvent").get("endDate"), today));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
@@ -402,13 +408,23 @@ public class MumlyEventService {
         return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Payout updated successfully.").build();
     }
 
-    public List<PayoutRequestDto> getPendingPayouts() {
+    public List<PayoutResponseDto> getPendingPayouts() {
 
         List<MumlyEventPayout> payouts = mumlyEventPayoutRepository.findByPaymentStatus(MumlyEnums.PaymentStatus.PENDING.toString());
-        List<PayoutRequestDto> dtoList = new ArrayList<>();
+        List<PayoutResponseDto> dtoList = new ArrayList<>();
         for (MumlyEventPayout payout : payouts) {
-            PayoutRequestDto dto = new PayoutRequestDto();
+            PayoutResponseDto dto = new PayoutResponseDto();
             dto.setEventId(payout.getEvent().getId());
+            dto.setEventTitle(payout.getEvent().getEventName());
+            dto.setEventOrganizerName(payout.getEvent().getOrganizerName());
+            dto.setEventCreatedBy(payout.getEvent().getCreatedBy().getOrganizerName());
+            dto.setNumberOfParticipants(eventRegistrationRepository
+                    .countBySelectedEventAndStatusNotIn(payout.getEvent(),
+                            Arrays.asList(MumlyEnums.EventStatus.REFUND.toString(),
+                                    MumlyEnums.EventStatus.CANCELLED.toString(),
+                                    MumlyEnums.EventStatus.REJECT.toString()
+                            )
+                    ));
             dto.setAmount(payout.getAmount());
             dto.setCommission(null);
             dto.setNetAmount(null);

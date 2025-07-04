@@ -27,6 +27,6 @@ public class CashPayment implements PaymentInterface {
 
     @Override
     public Response reversePayment(PaymentDto dto) {
-        return null;
+        return Response.builder().status(MumlyEnums.PaymentStatus.SUCCESS.toString()).message("Payment reversed successfully").data(MumlyUtils.generateRandomString()).build();
     }
 }

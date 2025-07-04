@@ -16,4 +16,5 @@ public class EventRegistrationFilter extends EventRegistrationDto {
     private Integer pageNumber;
     private Integer size;
     private String searchTerm;
+    private Boolean displayCompletedEvent = false;
 }

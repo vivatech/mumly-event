@@ -86,7 +86,7 @@ public class MumlyEventController {
     }
 
     @GetMapping("/get-pending-payouts")
-    public List<PayoutRequestDto> getPendingPayouts() {
+    public List<PayoutResponseDto> getPendingPayouts() {
         return service.getPendingPayouts();
     }
 

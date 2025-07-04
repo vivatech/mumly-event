@@ -36,6 +36,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,13 +71,15 @@ public class EventRegistrationController {
 
     @PostMapping
     @Transactional
-    public Response createEventRegistration(@RequestBody EventRegistrationRequestDto requestDto) {
+    public ResponseEntity<Response> createEventRegistration(@RequestBody EventRegistrationRequestDto requestDto) {
 
-        if (validateExistingRegistration(requestDto))
-            return Response.builder()
+        if (validateExistingRegistration(requestDto)) {
+            Response response = Response.builder()
                     .status(MumlyEnums.EventStatus.FAILED.toString())
                     .message("Event registration already exists for this event.")
                     .build();
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
 
         EventRegistrationDto dto = requestDto.getRegistrationDto();
         EventRegistration eventRegistration = new EventRegistration();
@@ -97,7 +100,7 @@ public class EventRegistrationController {
         notificationService.sendAdminNotification(savedRegistration.getId(), MumlyEnums.NotificationType.REGISTRATION, null);
         requestDto.getPaymentDto().setEventRegistrationId(savedRegistration.getId());
         Response response = paymentService.processPayment(requestDto.getPaymentDto());
-        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build();
+        return ResponseEntity.ok(Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build());
     }
 
     private boolean validateExistingRegistration(EventRegistrationRequestDto requestDto) {

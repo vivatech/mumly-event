@@ -10,12 +10,21 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.io.StreamCorruptedException;
+import java.nio.file.AccessDeniedException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 @ControllerAdvice
 @Slf4j
 @Component
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception ex) {
+        if (ex instanceof AccessDeniedException) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        return handleCustomException(new CustomExceptionHandler(ex.getMessage()));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
@@ -31,7 +40,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomExceptionHandler.class)
-    public ResponseEntity<String> handleUMSException(CustomExceptionHandler ex) {
+    public ResponseEntity<String> handleCustomException(CustomExceptionHandler ex) {
         String errorMessage = ex.getMessage();
         log.error("Exception: ", ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
