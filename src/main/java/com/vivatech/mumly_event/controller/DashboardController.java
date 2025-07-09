@@ -21,6 +21,7 @@ public class DashboardController {
                 .grossRevenue(dashboardService.calculateGrossRevenue(username))
                 .netRevenue(dashboardService.calculateNetRevenue(username))
                 .revenueByMonth(dashboardService.revenueByMonth(username))
+                .grossRevenueByMonth(dashboardService.grossRevenueByMonth(username))
                 .feedBackSummary(dashboardService.getAverageFeedbackParent(username))
                 .payoutMetrics(dashboardService.calculatePayoutMetrics(username))
                 .eventHistoryTally(dashboardService.eventDashboardHistory(username))

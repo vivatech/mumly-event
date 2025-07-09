@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -53,6 +54,8 @@ public class MumlyEvent {
     private String eventPicture;
     private String eventBrochure;
     private int maximumNumberOfAttendees;
+    @Column(name = "registered_attendees", columnDefinition = "integer default 0")
+    private int registeredAttendees;
     private String specialInstructions;
 
     @OneToMany(orphanRemoval = true)
@@ -65,5 +68,8 @@ public class MumlyEvent {
     @ManyToOne
     private MumlyEventOrganizer updatedBy;
     private String eventStatus;
+
+    @Formula("maximum_number_of_attendees - registered_attendees")
+    private int remainingTickets;
 
 }

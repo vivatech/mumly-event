@@ -27,6 +27,7 @@ public class EventReportResponse {
     private Double netRevenue;
     private List<Triple<String, Double, Double>> revenueByCategory = new ArrayList<>();
     private Map<String, Integer> revenueByMonth = new HashMap<>();
+    private Map<String, Integer> grossRevenueByMonth = new HashMap<>();
     private PayoutMetricsDto payoutMetrics;
     private EventDashboardHistory eventHistoryTally;
     private Integer refundIssued;

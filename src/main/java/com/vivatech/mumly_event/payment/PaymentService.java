@@ -12,6 +12,7 @@ import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.payment.intasend.RefundTicketDto;
 import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
+import com.vivatech.mumly_event.repository.MumlyEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class PaymentService {
+    @Autowired
+    private MumlyEventRepository mumlyEventRepository;
     @Autowired
     private EventRegistrationRepository eventRegistrationRepository;
 
@@ -81,6 +84,7 @@ public class PaymentService {
     public Response refundTicket(PaymentDto dto) {
         //Transaction ID means the Invoice ID which you got from the Aggregator
         MumlyEventPayment payment = paymentRepository.findByTransactionId(dto.getTransactionId());
+        if (payment == null) return Response.builder().status(MumlyEnums.EventStatus.FAILED.toString()).message("Payment not found").build();
         dto.setPaymentMode(MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()));
         dto.setMsisdn(payment.getMsisdn());
         dto.setEventRegistrationId(payment.getEventRegistration().getId());
@@ -106,7 +110,10 @@ public class PaymentService {
             EventRegistration eventRegistration = eventRegistrationRepository.findById(savedPayment.getEventRegistration().getId()).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
             eventRegistration.setStatus(MumlyEnums.EventStatus.REFUND.toString());
             eventRegistration.setReason(savedPayment.getReason());
-            eventRegistrationRepository.save(eventRegistration);
+            EventRegistration registration = eventRegistrationRepository.save(eventRegistration);
+            //After the refund success update the number of registered attendees
+            registration.getSelectedEvent().setRegisteredAttendees(registration.getSelectedEvent().getRegisteredAttendees() - 1);
+            mumlyEventRepository.save(registration.getSelectedEvent());
         }
         return response;
     }

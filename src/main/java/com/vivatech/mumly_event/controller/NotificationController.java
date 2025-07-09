@@ -65,7 +65,9 @@ public class NotificationController {
 
     @PostMapping("/emergency-notification")
     public Response sendEmergencyNotification(@RequestBody AdminNotificationDto dto) {
-        notificationService.sendAdminNotification(dto.getEventId(), MumlyEnums.NotificationType.EMERGENCY, dto.getMessage());
+        if (dto.getEventId() != null && !dto.getParticipantIds().isEmpty()) throw new CustomExceptionHandler("Participant Ids or Event Id should be null");
+        if (dto.getEventId() != null) notificationService.sendAdminNotification(dto.getEventId(), MumlyEnums.NotificationType.EMERGENCY, dto.getMessage());
+        if (!dto.getParticipantIds().isEmpty()) notificationService.sendEmergencyFeedbackToSelectedParent(dto.getParticipantIds(), dto.getMessage());
         return Response.builder().status("SUCCESS").message("Notification created successfully. Sending in the background.").build();
     }
 }

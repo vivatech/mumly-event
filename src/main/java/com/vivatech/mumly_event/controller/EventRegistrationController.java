@@ -24,6 +24,7 @@ import com.vivatech.mumly_event.repository.EventRegistrationRepository;
 import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import com.vivatech.mumly_event.repository.MumlyEventRepository;
 import com.vivatech.mumly_event.service.MumlyEventService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -73,7 +74,7 @@ public class EventRegistrationController {
     @Transactional
     public ResponseEntity<Response> createEventRegistration(@RequestBody EventRegistrationRequestDto requestDto) {
 
-        if (validateExistingRegistration(requestDto)) {
+        if (validateExistingRegistration(requestDto.getRegistrationDto().getParticipantPhone(), requestDto.getRegistrationDto().getEventId())) {
             Response response = Response.builder()
                     .status(MumlyEnums.EventStatus.FAILED.toString())
                     .message("Event registration already exists for this event.")
@@ -82,6 +83,8 @@ public class EventRegistrationController {
         }
 
         EventRegistrationDto dto = requestDto.getRegistrationDto();
+        MumlyEvent event = mumlyEventRepository.findById(dto.getEventId()).orElseThrow(() -> new CustomExceptionHandler("Event not found"));
+        if (event.getRemainingTickets() == 0) throw new CustomExceptionHandler("Event is full.");
         EventRegistration eventRegistration = new EventRegistration();
         eventRegistration.setParticipantName(dto.getParticipantName());
         eventRegistration.setGuardianName(dto.getGuardianName());
@@ -90,7 +93,6 @@ public class EventRegistrationController {
         eventRegistration.setParticipantAddress(dto.getParticipantAddress());
         eventRegistration.setParticipantGender(dto.getParticipantGender());
         eventRegistration.setParticipantAge(dto.getParticipantAge());
-        MumlyEvent event = mumlyEventRepository.findById(dto.getEventId()).orElseThrow(() -> new CustomExceptionHandler("Event not found"));
         eventRegistration.setSelectedEvent(event);
         Tickets tickets = event.getTickets().stream().filter(ele -> Objects.equals(ele.getId(), dto.getTicketId())).findFirst().orElseThrow(() -> new CustomExceptionHandler("Ticket not found"));
         eventRegistration.setTickets(tickets);
@@ -98,15 +100,16 @@ public class EventRegistrationController {
         eventRegistration.setCreatedAt(LocalDateTime.now());
         EventRegistration savedRegistration = eventRegistrationRepository.save(eventRegistration);
         notificationService.sendAdminNotification(savedRegistration.getId(), MumlyEnums.NotificationType.REGISTRATION, null);
+        event.setRegisteredAttendees(event.getRegisteredAttendees() + 1);
         requestDto.getPaymentDto().setEventRegistrationId(savedRegistration.getId());
         Response response = paymentService.processPayment(requestDto.getPaymentDto());
         return ResponseEntity.ok(Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build());
     }
 
-    private boolean validateExistingRegistration(EventRegistrationRequestDto requestDto) {
-        EventRegistration eventRegistration = eventRegistrationRepository.findByParticipantPhoneAndStatusInAndSelectedEventId(requestDto.getRegistrationDto().getParticipantPhone(),
+    private boolean validateExistingRegistration(String msisdn, Integer eventId) {
+        EventRegistration eventRegistration = eventRegistrationRepository.findByParticipantPhoneAndStatusInAndSelectedEventId(msisdn,
                 Arrays.asList(MumlyEnums.EventStatus.PENDING.toString(), MumlyEnums.EventStatus.APPROVE.toString()),
-                requestDto.getRegistrationDto().getEventId());
+                eventId);
         return eventRegistration != null;
     }
 
@@ -298,6 +301,13 @@ public class EventRegistrationController {
     @PostMapping("/refund")
     public Response refundTicket(@RequestBody PaymentDto dto) {
         return paymentService.refundTicket(dto);
+    }
+
+    @GetMapping("/is-already-registered")
+    @Operation(summary = "Check if the user is already registered for the event",
+            description = "If return true then the user is already registered for the event")
+    public Boolean isAlreadyRegistered(@RequestParam String phoneNumber, @RequestParam Integer eventId) {
+        return validateExistingRegistration(phoneNumber, eventId);
     }
 
     private List<EventRegistration> updateImagePathInEvents(List<EventRegistration> registrationList) {

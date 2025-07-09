@@ -118,6 +118,31 @@ public class NotificationService {
             notification.setOwnerName(participant.getSelectedEvent().getOrganizerName());
             adminNotificationRepository.save(notification);
         }
+        log.info("EMERGENCY NOTIFICATION sent to {} participants", participants.size());
+    }
+
+    public void sendEmergencyFeedbackToSelectedParent(List<Integer> participantIds, String message) {
+        List<EventRegistration> registrations = eventRegistrationRepository.findAllById(participantIds).stream()
+                .filter(ele -> ele.getStatus().equalsIgnoreCase(MumlyEnums.EventStatus.APPROVE.toString()))
+                .toList();;
+        for (EventRegistration participant : registrations) {
+            AdminNotification notification = new AdminNotification();
+            notification.setMessage(message);
+            notification.setType(NotificationType.EMERGENCY.toString());
+            notification.setRead(false);
+            notification.setSenderMsisdn(participant.getSelectedEvent().getOrganizerPhoneNumber());
+            notification.setReceiverMsisdn(participant.getParticipantPhone());
+            notification.setSenderEmil(participant.getSelectedEvent().getOrganizerContactEmail());
+            notification.setReceiverEmail(participant.getParticipantEmail());
+            notification.setEmailSentStatus(MumlyEnums.EventStatus.PENDING.toString());
+            notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
+            notification.setRetryCount(0);
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setOrganizerId(participant.getSelectedEvent().getCreatedBy().getId());
+            notification.setApplicationName(MumlyEnums.ApplicationName.MUMLY_EVENT.toString());
+            notification.setOwnerName(participant.getSelectedEvent().getOrganizerName());
+            adminNotificationRepository.save(notification);
+        }
     }
 
     private void sendFeedbackToParent(Integer id, String message) {

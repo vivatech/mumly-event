@@ -324,10 +324,21 @@ public class MumlyEventService {
                 predicates.add(criteriaBuilder.like(root.get("eventName"), "%" + dto.getEventName() + "%"));
             }
 
+            if (!StringUtils.isEmpty(dto.getSearchTerm())) {
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.like(root.get("eventName"), "%" + dto.getSearchTerm() + "%"),
+                        criteriaBuilder.like(root.get("eventCategory").get("name"), "%" + dto.getSearchTerm() + "%"),
+                        criteriaBuilder.like(root.get("venueName"), "%" + dto.getSearchTerm() + "%"),
+                        criteriaBuilder.like(root.get("venueAddress"), "%" + dto.getSearchTerm() + "%"),
+                        criteriaBuilder.like(root.get("eventDescription"), "%" + dto.getSearchTerm() + "%")));
+            }
+
             if (!dto.getDisplayCompletedEvent()) {
                 LocalDate today = LocalDate.now();
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), today));
             }
+
+            query.orderBy(criteriaBuilder.desc(root.get("createdAt")));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

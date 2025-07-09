@@ -250,6 +250,23 @@ public class DashboardService {
         return revenueByMonth;
     }
 
+    public Map<String, Integer> grossRevenueByMonth(String username) {
+        MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
+        MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
+        int targetYear = Year.now().getValue();
+        List<MumlyEvent> mumlyEvents = mumlyEventRepository.findByCreatedById(organizer.getId());
+        List<MumlyEvent> eventList = mumlyEvents.stream().filter(ele -> ele.getStartDate().getYear() == targetYear).toList();
+        Map<String, Integer> grossRevenueByMonth = initializeEmptyMonthMap();
+        for (MumlyEvent event : eventList) {
+            MumlyEventPayout mumlyEventPayout = mumlyEventPayoutRepository.findByEventIdAndPaymentStatusIn(event.getId(), Collections.singletonList(MumlyEnums.PaymentStatus.SUCCESS.toString()));
+            if (mumlyEventPayout == null) continue;
+            double grossAmount = mumlyEventPayout.getAmount();
+            String month = event.getStartDate().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH); // "Jan", "Feb", etc.
+            grossRevenueByMonth.put(month, grossRevenueByMonth.getOrDefault(month, 0) + (int) grossAmount);
+        }
+        return grossRevenueByMonth;
+    }
+
     public PayoutMetricsDto calculatePayoutMetrics(String username) {
         MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(username);
         MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElseThrow(() -> new CustomExceptionHandler("Organizer not found"));
