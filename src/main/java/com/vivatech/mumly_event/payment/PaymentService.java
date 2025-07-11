@@ -47,7 +47,7 @@ public class PaymentService {
         } else {
             eventPayment.setPaymentStatus(MumlyEnums.PaymentStatus.FAILED.toString());
             eventPayment.setReason(paymentResponse.getMessage());
-            eventPayment.getEventRegistration().setStatus(MumlyEnums.EventStatus.FAILED.toString());
+            eventPayment.getEventRegistration().setStatus(MumlyEnums.Status.FAILED.toString());
             response.setStatus(MumlyEnums.PaymentStatus.FAILED.toString());
         }
         MumlyEventPayment savedPayment = paymentRepository.save(eventPayment);
@@ -84,7 +84,7 @@ public class PaymentService {
     public Response refundTicket(PaymentDto dto) {
         //Transaction ID means the Invoice ID which you got from the Aggregator
         MumlyEventPayment payment = paymentRepository.findByTransactionId(dto.getTransactionId());
-        if (payment == null) return Response.builder().status(MumlyEnums.EventStatus.FAILED.toString()).message("Payment not found").build();
+        if (payment == null) return Response.builder().status(MumlyEnums.Status.FAILED.toString()).message("Payment not found").build();
         dto.setPaymentMode(MumlyEnums.PaymentMode.valueOf(payment.getPaymentMode()));
         dto.setMsisdn(payment.getMsisdn());
         dto.setEventRegistrationId(payment.getEventRegistration().getId());

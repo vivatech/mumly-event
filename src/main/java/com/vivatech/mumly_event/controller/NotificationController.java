@@ -11,6 +11,7 @@ import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.notification.model.AdminNotification;
 import com.vivatech.mumly_event.notification.repository.AdminNotificationRepository;
 import com.vivatech.mumly_event.repository.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -53,19 +54,24 @@ public class NotificationController {
     }
 
     @GetMapping("/parent-notification")
-    public List<AdminNotification> getParentNotification(@RequestParam String parentMsisdn) {
+    public List<AdminNotification> getParentNotification(@RequestParam(required = true) String parentMsisdn) {
+        if (StringUtils.isEmpty(parentMsisdn)) throw new CustomExceptionHandler("Parent msisdn is required");
         return adminNotificationRepository.findByReceiverMsisdnAndIsRead(parentMsisdn, false);
     }
 
     @GetMapping("/parent-notification-unread-count")
     public Integer getParentNotificationUnreadCount(@RequestParam String parentMsisdn) {
+        if (StringUtils.isEmpty(parentMsisdn)) throw new CustomExceptionHandler("Parent msisdn is required");
         List<AdminNotification> parentNotification = adminNotificationRepository.findByReceiverMsisdnAndIsRead(parentMsisdn, false);
         return parentNotification.size();
     }
 
     @PostMapping("/emergency-notification")
     public Response sendEmergencyNotification(@RequestBody AdminNotificationDto dto) {
+        String validationMessage = dto.validate();
+        if (validationMessage != null) throw new CustomExceptionHandler(validationMessage);
         if (dto.getEventId() != null && !dto.getParticipantIds().isEmpty()) throw new CustomExceptionHandler("Participant Ids or Event Id should be null");
+        //After validation apply the logic
         if (dto.getEventId() != null) notificationService.sendAdminNotification(dto.getEventId(), MumlyEnums.NotificationType.EMERGENCY, dto.getMessage());
         if (!dto.getParticipantIds().isEmpty()) notificationService.sendEmergencyFeedbackToSelectedParent(dto.getParticipantIds(), dto.getMessage());
         return Response.builder().status("SUCCESS").message("Notification created successfully. Sending in the background.").build();

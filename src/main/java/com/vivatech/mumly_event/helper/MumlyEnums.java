@@ -1,8 +1,13 @@
 package com.vivatech.mumly_event.helper;
 
 public class MumlyEnums {
+
+    public enum Status {
+        SUCCESS, FAILED, PENDING
+    }
+
     public enum EventStatus {
-        SUCCESS, FAILED, PENDING, ACTIVE, COMPLETED, CANCELLED, APPROVE, REJECT, REFUND
+        PENDING, CANCELLED, APPROVE, REJECT, REFUND
     }
 
     public enum PaymentAggregator {
@@ -10,7 +15,7 @@ public class MumlyEnums {
     }
 
     public enum PaymentMode {
-        CASH, BANK_TRANSFER, MPESA, INTA_SEND, SAFARI_COM
+        CASH, BANK_TRANSFER, MPESA, SAFARI_COM
     }
 
     public enum PaymentStatus {

@@ -401,7 +401,7 @@ public class MumlyEventService {
         //TODO: Send the notification to the registered participant
         notificationService.sendAdminNotification(eventId, MumlyEnums.NotificationType.EMERGENCY, reason);
 
-        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event cancelled and payment refund success.").build();
+        return Response.builder().status(MumlyEnums.Status.SUCCESS.toString()).message("Event cancelled and payment refund success.").build();
     }
 
     @Transactional
@@ -416,7 +416,7 @@ public class MumlyEventService {
         mumlyEventPayout.setPaymentMode(dto.getPaymentMode().toString());
         mumlyEventPayout.setReason(dto.getReason());
         mumlyEventPayoutRepository.save(mumlyEventPayout);
-        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Payout updated successfully.").build();
+        return Response.builder().status(MumlyEnums.Status.SUCCESS.toString()).message("Payout updated successfully.").build();
     }
 
     public List<PayoutResponseDto> getPendingPayouts() {

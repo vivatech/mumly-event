@@ -2,6 +2,7 @@ package com.vivatech.mumly_event.service;
 
 import com.vivatech.mumly_event.dto.ParentFeedbackFilter;
 import com.vivatech.mumly_event.dto.ParentFeedbackRequest;
+import com.vivatech.mumly_event.exception.CustomExceptionHandler;
 import com.vivatech.mumly_event.model.*;
 import com.vivatech.mumly_event.repository.MumlyAdminsRepository;
 import com.vivatech.mumly_event.repository.MumlyEventOrganizerRepository;
@@ -102,7 +103,8 @@ public class ParentFeedbackService {
             }
 
             if (dto.getStartDate() != null && dto.getEndDate() != null) {
-                predicates.add(criteriaBuilder.between(root.get("startDate"), dto.getStartDate(), dto.getEndDate()));
+                if (dto.getStartDate().equals(dto.getEndDate())) predicates.add(criteriaBuilder.equal(root.get("feedbackDate"), dto.getStartDate()));
+                else predicates.add(criteriaBuilder.between(root.get("feedbackDate"), dto.getStartDate(), dto.getEndDate()));
             }
 
             if (dto.getSubmittedById() != null) {
@@ -115,6 +117,7 @@ public class ParentFeedbackService {
             }
             if (!StringUtils.isEmpty(dto.getEventOrganizerUserName())) {
                 MumlyAdmin mumlyAdmin = mumlyAdminsRepository.findByUsername(dto.getEventOrganizerUserName());
+                if (mumlyAdmin == null) throw new CustomExceptionHandler("User not found");
                 MumlyEventOrganizer organizer = mumlyEventOrganizerRepository.findByAdminId(mumlyAdmin.getId()).orElse(null);
                 if (organizer != null) {
                     List<Integer> eventList = mumlyEventRepository.findByCreatedById(organizer.getId())

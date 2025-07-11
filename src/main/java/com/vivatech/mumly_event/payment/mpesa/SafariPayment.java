@@ -83,7 +83,7 @@ public class SafariPayment implements PaymentInterface {
         referenceNo.setPaymentStatus(MumlyEnums.PaymentStatus.REFUND.toString());
         mumlyEventPaymentRepository.save(referenceNo);
         //TODO: Implement B2C mPesa reverse payment
-        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).build();
+        return Response.builder().status(MumlyEnums.Status.SUCCESS.toString()).build();
     }
 
     public HashMap<String, Object> getAccessToken() {

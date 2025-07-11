@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vivatech.mumly_event.config.ApplicationContextProvider;
 import com.vivatech.mumly_event.dto.Response;
 import com.vivatech.mumly_event.exception.CustomExceptionHandler;
+import com.vivatech.mumly_event.exception.IntaSendAPIExceptionHandler;
 import com.vivatech.mumly_event.helper.MumlyEnums;
 import com.vivatech.mumly_event.helper.MumlyUtils;
 import com.vivatech.mumly_event.payment.PaymentDto;
@@ -81,10 +82,14 @@ public class IntaSend implements PaymentInterface {
                     .body(MumlyUtils.makeDtoToJsonString(requestData))
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (res, ctx) -> {
-                        log.error("Getting 400 error: {}", res.getMethod());
+                        String errorBody = new String(ctx.getBody().readAllBytes());
+                        log.error("IntaSend STKPush - Getting 400 error: {} | {} | {}", res.getMethod(), ctx.getStatusText(), errorBody);
+                        throw new IntaSendAPIExceptionHandler(errorBody);
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (res, ctx) -> {
-                        log.error("Getting 500 error: {}", res.getMethod());
+                        String errorBody = new String(ctx.getBody().readAllBytes());
+                        log.error("IntaSend STKPush - Getting 500 error: {} | {} | {}", res.getMethod(), ctx.getStatusText(), errorBody);
+                        throw new IntaSendAPIExceptionHandler(errorBody);
                     })
                     .body(String.class);
 
@@ -105,10 +110,14 @@ public class IntaSend implements PaymentInterface {
                     .body(MumlyUtils.makeDtoToJsonString(requestData))
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (res, ctx) -> {
-                        log.error("Getting 400 error - IntaSend Chargeback(Refund): {}", res.getMethod());
+                        String errorBody = new String(ctx.getBody().readAllBytes());
+                        log.error("IntaSend Refund - Getting 400 error: {} | {} | {}", res.getMethod(), ctx.getStatusText(), errorBody);
+                        throw new IntaSendAPIExceptionHandler(errorBody);
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (res, ctx) -> {
-                        log.error("Getting 500 error - IntaSend Chargeback(Refund): {}", res.getMethod());
+                        String errorBody = new String(ctx.getBody().readAllBytes());
+                        log.error("IntaSend Refund - Getting 500 error: {} | {} | {}", res.getMethod(), ctx.getStatusText(), errorBody);
+                        throw new IntaSendAPIExceptionHandler(errorBody);
                     })
                     .body(String.class);
 

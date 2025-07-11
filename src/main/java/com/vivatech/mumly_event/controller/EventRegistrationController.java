@@ -76,7 +76,7 @@ public class EventRegistrationController {
 
         if (validateExistingRegistration(requestDto.getRegistrationDto().getParticipantPhone(), requestDto.getRegistrationDto().getEventId())) {
             Response response = Response.builder()
-                    .status(MumlyEnums.EventStatus.FAILED.toString())
+                    .status(MumlyEnums.Status.FAILED.toString())
                     .message("Event registration already exists for this event.")
                     .build();
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
@@ -103,7 +103,7 @@ public class EventRegistrationController {
         event.setRegisteredAttendees(event.getRegisteredAttendees() + 1);
         requestDto.getPaymentDto().setEventRegistrationId(savedRegistration.getId());
         Response response = paymentService.processPayment(requestDto.getPaymentDto());
-        return ResponseEntity.ok(Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build());
+        return ResponseEntity.ok(Response.builder().status(MumlyEnums.Status.SUCCESS.toString()).message("Event registration created successfully").data(response.getData()).build());
     }
 
     private boolean validateExistingRegistration(String msisdn, Integer eventId) {
@@ -116,9 +116,10 @@ public class EventRegistrationController {
     @PutMapping("/{id}")
     public Response updateParticipantStatus(@PathVariable Integer id, @RequestParam MumlyEnums.EventStatus status){
         EventRegistration eventRegistration = eventRegistrationRepository.findById(id).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
+        if (eventRegistration.getStatus().equalsIgnoreCase(MumlyEnums.EventStatus.REFUND.toString())) throw new CustomExceptionHandler("Ticket already refunded. Cannot change the status.");
         eventRegistration.setStatus(status.toString());
         eventRegistrationRepository.save(eventRegistration);
-        return Response.builder().status(MumlyEnums.EventStatus.SUCCESS.toString()).message("Participant event status " + status + " success.").build();
+        return Response.builder().status(MumlyEnums.Status.SUCCESS.toString()).message("Participant event status " + status + " success.").build();
     }
 
     @GetMapping("/get-payment-detail")
@@ -299,8 +300,16 @@ public class EventRegistrationController {
     }
 
     @PostMapping("/refund")
-    public Response refundTicket(@RequestBody PaymentDto dto) {
-        return paymentService.refundTicket(dto);
+    public Response refundTicket(@RequestParam Integer participantId, @RequestParam String reason) {
+        EventRegistration eventRegistration = eventRegistrationRepository.findById(participantId).orElseThrow(() -> new CustomExceptionHandler("Event registration not found"));
+        if (eventRegistration.getStatus().equalsIgnoreCase(MumlyEnums.EventStatus.REFUND.toString())) throw new CustomExceptionHandler("Ticket already refunded");
+        MumlyEventPayment payment = mumlyEventPaymentRepository.findByEventRegistrationAndPaymentStatus(eventRegistration, MumlyEnums.PaymentStatus.COMPLETE.toString());
+        if (payment == null) throw new CustomExceptionHandler("Payment not found");
+        PaymentDto paymentDto = new PaymentDto();
+        paymentDto.setTransactionId(payment.getTransactionId());
+        paymentDto.setAmount(payment.getAmount());
+        paymentDto.setReason(reason);
+        return paymentService.refundTicket(paymentDto);
     }
 
     @GetMapping("/is-already-registered")

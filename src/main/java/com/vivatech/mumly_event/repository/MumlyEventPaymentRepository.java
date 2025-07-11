@@ -18,4 +18,6 @@ public interface MumlyEventPaymentRepository extends JpaRepository<MumlyEventPay
     MumlyEventPayment findByTransactionId(String transactionId);
 
     List<MumlyEventPayment> findByEventRegistrationSelectedEventIdAndPaymentStatus(Integer eventId, String paymentStatus);
+
+    MumlyEventPayment findByEventRegistrationAndPaymentStatus(EventRegistration eventRegistration, String paymentStatus);
 }

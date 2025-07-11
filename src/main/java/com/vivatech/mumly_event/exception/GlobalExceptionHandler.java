@@ -46,6 +46,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
     }
 
+    @ExceptionHandler(IntaSendAPIExceptionHandler.class)
+    public ResponseEntity<String> handleOnlineTutorException(IntaSendAPIExceptionHandler ex) {
+        log.error("Zoom API Exception: ", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
         String errorResponse = ex.getMessage();

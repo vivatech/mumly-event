@@ -65,19 +65,21 @@ public class AttendanceController {
     }
 
     @GetMapping("/history")
-    public List<AttendanceStatus> getAttendanceHistory(@RequestParam Integer eventId,
+    public List<AttendanceStatus> getAttendanceHistoryNew(@RequestParam Integer eventId,
                                                        @RequestParam LocalDate startDate,
                                                        @RequestParam LocalDate endDate,
                                                        @RequestParam(required = false) String participantName) {
-        List<Object[]> results = attendanceRepository.getAttendanceListByEvent(eventId, startDate, endDate);
-        List<AttendanceStatus> statusList = results.stream()
+        List<EventRegistration> registrationList = eventRegistrationRepository.findBySelectedEventIdIn(List.of(eventId));
+        List<Attendance> attendanceList = attendanceRepository.findByEventRegistrationIn(registrationList);
+        List<AttendanceStatus> statusList = attendanceList.stream()
+                .filter(ele -> ele.getDate().isAfter(startDate.minusDays(1)) && ele.getDate().isBefore(endDate.plusDays(1)))
                 .map(obj -> AttendanceStatus.builder()
-                        .date((LocalDate) obj[0])
-                        .presentCount(((Number) obj[1]).intValue())
-                        .absentCount(((Number) obj[2]).intValue())
-                        .name((String) obj[3])
-                        .email((String) obj[4])
-                        .build()).toList();
+                .date(obj.getDate())
+                .presentCount(obj.getPresent() ? 1 : 0)
+                .absentCount(obj.getPresent() ? 0 : 1)
+                .name(obj.getEventRegistration().getParticipantName())
+                .email(obj.getEventRegistration().getParticipantEmail())
+                .build()).toList();
         if (!StringUtils.isEmpty(participantName)) {
             String lowerCaseName = participantName.toLowerCase();
             statusList = statusList.stream()
