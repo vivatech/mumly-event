@@ -25,6 +25,7 @@ import com.vivatech.mumly_event.repository.MumlyEventPaymentRepository;
 import com.vivatech.mumly_event.repository.MumlyEventRepository;
 import com.vivatech.mumly_event.service.MumlyEventService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -55,6 +56,7 @@ import static com.vivatech.mumly_event.helper.MumlyUtils.formatLocalDateToString
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/event/event-registration")
+@Tag(name = "Event Registration", description = "Event Registration APIs")
 public class EventRegistrationController {
 
     @Autowired
@@ -72,6 +74,9 @@ public class EventRegistrationController {
 
     @PostMapping
     @Transactional
+    @Operation(summary = "v1.3.7: Create event registration",
+            description = "Pass the event registration details in the request body from parent app pass the parent phone number and email" +
+                    " in the request body from parent app and for participant pass the student phone number and email.")
     public ResponseEntity<Response> createEventRegistration(@RequestBody EventRegistrationRequestDto requestDto) {
 
         if (validateExistingRegistration(requestDto.getRegistrationDto().getParticipantPhone(), requestDto.getRegistrationDto().getEventId())) {
@@ -88,6 +93,7 @@ public class EventRegistrationController {
         EventRegistration eventRegistration = new EventRegistration();
         eventRegistration.setParticipantName(dto.getParticipantName());
         eventRegistration.setGuardianName(dto.getGuardianName());
+        eventRegistration.setGuardianPhone(dto.getGuardianPhone());
         eventRegistration.setParticipantEmail(dto.getParticipantEmail());
         eventRegistration.setParticipantPhone(dto.getParticipantPhone());
         eventRegistration.setParticipantAddress(dto.getParticipantAddress());

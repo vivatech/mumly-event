@@ -21,6 +21,9 @@ public class EventRegistration {
 
     private String participantName;
     private String guardianName;
+    private String guardianPhone;
+    @Email(message = "Invalid email address")
+    private String guardianEmail;
     @Email(message = "Invalid email address")
     private String participantEmail;
     private String participantPhone;

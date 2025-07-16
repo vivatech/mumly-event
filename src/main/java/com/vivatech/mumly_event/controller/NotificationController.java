@@ -11,6 +11,8 @@ import com.vivatech.mumly_event.notification.NotificationService;
 import com.vivatech.mumly_event.notification.model.AdminNotification;
 import com.vivatech.mumly_event.notification.repository.AdminNotificationRepository;
 import com.vivatech.mumly_event.repository.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/event/notifications")
+@Tag(name = "Notification Controller", description = "Notification APIs")
 public class NotificationController {
 
     private final AdminNotificationRepository adminNotificationRepository;
@@ -66,6 +69,7 @@ public class NotificationController {
         return parentNotification.size();
     }
 
+    @Operation(summary = "v1.3.7: Send emergency notification", description = "Send emergency notification")
     @PostMapping("/emergency-notification")
     public Response sendEmergencyNotification(@RequestBody AdminNotificationDto dto) {
         String validationMessage = dto.validate();

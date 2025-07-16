@@ -106,9 +106,9 @@ public class NotificationService {
             notification.setType(NotificationType.EMERGENCY.toString());
             notification.setRead(false);
             notification.setSenderMsisdn(participant.getSelectedEvent().getOrganizerPhoneNumber());
-            notification.setReceiverMsisdn(participant.getParticipantPhone());
+            notification.setReceiverMsisdn(participant.getGuardianPhone());
             notification.setSenderEmil(participant.getSelectedEvent().getOrganizerContactEmail());
-            notification.setReceiverEmail(participant.getParticipantEmail());
+            notification.setReceiverEmail(participant.getGuardianEmail());
             notification.setEmailSentStatus(MumlyEnums.EventStatus.PENDING.toString());
             notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
             notification.setRetryCount(0);
@@ -131,9 +131,9 @@ public class NotificationService {
             notification.setType(NotificationType.EMERGENCY.toString());
             notification.setRead(false);
             notification.setSenderMsisdn(participant.getSelectedEvent().getOrganizerPhoneNumber());
-            notification.setReceiverMsisdn(participant.getParticipantPhone());
+            notification.setReceiverMsisdn(participant.getGuardianPhone());
             notification.setSenderEmil(participant.getSelectedEvent().getOrganizerContactEmail());
-            notification.setReceiverEmail(participant.getParticipantEmail());
+            notification.setReceiverEmail(participant.getGuardianEmail());
             notification.setEmailSentStatus(MumlyEnums.EventStatus.PENDING.toString());
             notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
             notification.setRetryCount(0);
@@ -152,9 +152,9 @@ public class NotificationService {
         notification.setType(NotificationType.FEEDBACK.toString());
         notification.setRead(false);
         notification.setSenderMsisdn(feedback.getEventRegistration().getSelectedEvent().getOrganizerPhoneNumber());
-        notification.setReceiverMsisdn(feedback.getEventRegistration().getParticipantPhone());
+        notification.setReceiverMsisdn(feedback.getEventRegistration().getGuardianPhone());
         notification.setSenderEmil(feedback.getEventRegistration().getSelectedEvent().getOrganizerContactEmail());
-        notification.setReceiverEmail(feedback.getEventRegistration().getParticipantEmail());
+        notification.setReceiverEmail(feedback.getEventRegistration().getGuardianEmail());
         notification.setEmailSentStatus(MumlyEnums.EventStatus.PENDING.toString());
         notification.setSmsSentStatus(MumlyEnums.EventStatus.PENDING.toString());
         notification.setRetryCount(0);

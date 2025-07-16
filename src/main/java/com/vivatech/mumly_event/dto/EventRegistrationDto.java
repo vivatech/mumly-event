@@ -18,6 +18,10 @@ public class EventRegistrationDto {
     private String participantName;
     @NotNull(message = "Guardian name is required")
     private String guardianName;
+    @NotNull(message = "Guardian phone number is required")
+    private String guardianPhone;
+    @Email(message = "Invalid email address")
+    private String guardianEmail;
     @Email(message = "Invalid email address")
     private String participantEmail;
     @NotNull(message = "Participant phone number is required")
